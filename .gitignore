@@ -1,0 +1,38 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.*
+
+# Build output
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Caches
+.turbo/
+.swc/
+
+# Env / secrets (keep .env.example tracked)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Payload local uploads (we use object storage)
+/media/
+
+# Deploy / misc
+.vercel/
+coverage/

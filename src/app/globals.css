@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+/* class 模式暗色：在 <html> 上切换 .dark（见 docs/前端设计规范.md §3） */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ──────────────────────────────────────────────────────────
+   设计令牌（亮色 = 默认）            详见 docs/前端设计规范.md §2
+   组件只用语义变量（--paper/--ink/--accent…），不要写死颜色。
+   ────────────────────────────────────────────────────────── */
+:root {
+  /* 中性 · 纸与墨（暖调） */
+  --paper:        #FFFFFF;
+  --surface:      #FAF7F5;
+  --panel:        #F3ECE7;
+  --ink:          #15110F;
+  --ink-muted:    #5C534D;
+  --ink-subtle:   #8A807A;
+  --line:         #E8E1DC;
+  --line-strong:  #15110F;
+
+  /* 强调 · 玫瑰粉 / 裸色 */
+  --accent:        #C96A72;
+  --accent-strong: #B14E57;
+  --accent-soft:   #F8E8E9;
+  --on-accent:     #FFFFFF;
+  --nude:          #E7D5C9;
+
+  --focus: var(--accent);
+}
+
+.dark {
+  --paper:        #131013;
+  --surface:      #1C181B;
+  --panel:        #262126;
+  --ink:          #F4F0EE;
+  --ink-muted:    #B3A9A3;
+  --ink-subtle:   #7E746F;
+  --line:         #2C2730;
+  --line-strong:  #F4F0EE;
+
+  --accent:        #E6A0A7;
+  --accent-strong: #EFB9BD;
+  --accent-soft:   #2A2024;
+  --on-accent:     #1A1416;
+  --nude:          #C9A99B;
+
+  --focus: var(--accent);
+}
+
+/* ── Tailwind v4 主题映射（inline = 保留 var 引用，随 .dark 实时切换）── */
+@theme inline {
+  --color-paper:         var(--paper);
+  --color-surface:       var(--surface);
+  --color-panel:         var(--panel);
+  --color-ink:           var(--ink);
+  --color-ink-muted:     var(--ink-muted);
+  --color-ink-subtle:    var(--ink-subtle);
+  --color-line:          var(--line);
+  --color-line-strong:   var(--line-strong);
+  --color-accent:        var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft:   var(--accent-soft);
+  --color-on-accent:     var(--on-accent);
+  --color-nude:          var(--nude);
+
+  /* 字体：Latin 优先用 next/font 注入的 *-web 变量（联网构建或自托管字体时生效），
+     未注入时 var() 内置回退到字体名 → 系统字体；CJK 始终走系统字体（性能优先）。
+     var() 的内置回退同时保证未注入时 CSS 合法（避免前导逗号导致整条声明失效）。 */
+  --font-display: var(--font-display-web, "Fraunces"), "Noto Serif SC", Georgia, "Songti SC", serif;
+  --font-sans:    var(--font-sans-web, "Inter"), "Noto Sans SC", -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono:    var(--font-mono-web, "Geist Mono"), ui-monospace, "SFMono-Regular", "JetBrains Mono", monospace;
+}
+
+/* ── 字号刻度 & 圆角（静态令牌；完整刻度见设计规范 §2.2 / §2.4）── */
+@theme {
+  --text-display-xl: clamp(2.75rem, 6vw, 5rem);
+  --text-display-xl--line-height: 1.02;
+  --text-display-xl--letter-spacing: -0.02em;
+
+  --text-display-l: clamp(2rem, 4vw, 3.25rem);
+  --text-display-l--line-height: 1.05;
+  --text-display-l--letter-spacing: -0.02em;
+
+  --text-overline: 0.75rem;
+  --text-overline--line-height: 1.4;
+  --text-overline--letter-spacing: 0.16em;
+
+  --radius-none: 0px;
+  --radius-xs: 2px;
+}
+
+/* ── 基础 ── */
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+/* 主题切换平滑过渡；尊重 prefers-reduced-motion（设计规范 §7）*/
+@media (prefers-reduced-motion: no-preference) {
+  html { transition: background-color 240ms ease, color 240ms ease; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+}

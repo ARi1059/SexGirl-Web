@@ -41,7 +41,7 @@ export function ProductCard({ product, feature = false }: { product: Product; fe
         <h3 className="mt-2 font-display text-h2 font-semibold leading-tight">
           <span className="draw-underline">{product.title}</span>
         </h3>
-        <TagRenderer tags={product.tags} className="mt-3" />
+        <TagRenderer tags={product.tags} className="mt-3" linkAsText />
       </div>
     </>
   );

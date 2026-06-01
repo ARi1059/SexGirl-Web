@@ -57,8 +57,20 @@ function ColorBlockTag({ label, style }: { label: string; style: unknown }) {
   );
 }
 
-/** link：label + ↗，hover 下划线，新标签打开（noopener） */
-function LinkTag({ label, url }: { label: string; url: string }) {
+/**
+ * link：label + ↗，hover 下划线，新标签打开（noopener）。
+ * asText=true 时降级为非交互文字（不渲染 <a>）——用于画廊卡片：整卡已被
+ * Gallery 的 <Link> 包裹，卡内再嵌 <a> 会造成 <a> 套 <a> 的非法嵌套与 hydration 报错。
+ */
+function LinkTag({ label, url, asText = false }: { label: string; url: string; asText?: boolean }) {
+  if (asText) {
+    return (
+      <span className="inline-flex items-center gap-0.5 text-xs text-ink-muted">
+        <span>{label}</span>
+        <span aria-hidden>↗</span>
+      </span>
+    );
+  }
   return (
     <a
       href={url}
@@ -73,7 +85,7 @@ function LinkTag({ label, url }: { label: string; url: string }) {
 }
 
 /** 按 blockType 分发单个标签；未知类型降级为 null（设计规范 §6.3 / 开发文档 §5.2） */
-function Tag({ tag }: { tag: TagBlock }) {
+function Tag({ tag, linkAsText = false }: { tag: TagBlock; linkAsText?: boolean }) {
   switch (tag.blockType) {
     case "text":
       return <TextTag label={tag.label} style={tag.style} />;
@@ -82,25 +94,28 @@ function Tag({ tag }: { tag: TagBlock }) {
     case "colorBlock":
       return <ColorBlockTag label={tag.label} style={tag.style} />;
     case "link":
-      return <LinkTag label={tag.label} url={tag.url} />;
+      return <LinkTag label={tag.label} url={tag.url} asText={linkAsText} />;
     default:
       return null;
   }
 }
 
-/** 标签组渲染器：横向排列、space-2 间隔、超出换行（设计规范 §6.3） */
+/** 标签组渲染器：横向排列、space-2 间隔、超出换行（设计规范 §6.3）。
+ *  linkAsText：把 link 标签降级为非交互文字，用于已被外层 <Link> 包裹的画廊卡片。 */
 export function TagRenderer({
   tags,
   className,
+  linkAsText = false,
 }: {
   tags: Product["tags"];
   className?: string;
+  linkAsText?: boolean;
 }) {
   if (!tags?.length) return null;
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       {tags.map((tag, i) => (
-        <Tag key={tag.id ?? i} tag={tag} />
+        <Tag key={tag.id ?? i} tag={tag} linkAsText={linkAsText} />
       ))}
     </div>
   );

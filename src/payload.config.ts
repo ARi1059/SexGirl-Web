@@ -20,9 +20,11 @@ const dirname = path.dirname(filename)
 // 本地开发无 S3 env 时，上传走本地磁盘（/media，已 gitignore）。
 const hasS3 = Boolean(process.env.S3_BUCKET && process.env.S3_ACCESS_KEY_ID)
 
-// 正式域名（部署时由 Vercel 注入 NEXT_PUBLIC_SERVER_URL，本地回退 localhost）。
-// 注意：不能带末尾斜杠或路径——CORS/CSRF 按精确字符串匹配 Origin 头（永不带斜杠）。
-const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
+// 正式域名（部署时由 NEXT_PUBLIC_SERVER_URL 注入）。本地不设时回退空串——
+// serverURL 为空时 Payload 生成同源相对路径 /api/media/file/*，next/image 当本地图优化、
+// 无需 remotePatterns，也避开 Next 16 对解析到私有 IP（localhost）的"远程图"SSRF 拦截。
+// 注意：生产必须设成 https 正式域名（非私有 IP），不能带末尾斜杠或路径——CORS/CSRF 按精确字符串匹配 Origin 头。
+const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || ''
 
 export default buildConfig({
   // 后台面板 / 邮件链接 / 元数据用的绝对地址。Payload 不会自动读 NEXT_PUBLIC_SERVER_URL，必须显式接。

@@ -47,9 +47,14 @@
 #
 set -euo pipefail
 
-# ── 自动提权：非 root 时用 sudo 重跑自身，-E 保留你传入的环境变量覆盖 ────────────
+# ── 自动提权：非 root 时用 sudo 重跑自身（-E 保留环境变量覆盖）；无 sudo 则提示切 root ──
 if [ "$(id -u)" -ne 0 ]; then
-  exec sudo -E bash "$0" "$@"
+  if command -v sudo >/dev/null 2>&1; then
+    exec sudo -E bash "$0" "$@"
+  else
+    echo "本机没有 sudo：请先切到 root（su -）再运行本脚本。" >&2
+    exit 1
+  fi
 fi
 
 # ── 可配置项（环境变量覆盖；未设则用默认）────────────────────────────────────
@@ -173,14 +178,14 @@ ensure_postgres() {
     [ -n "$DB_PASS" ] || DB_PASS="$(openssl rand -hex 24)"
   fi
 
-  local psql='sudo -u postgres psql -v ON_ERROR_STOP=1'
+  local psql='runuser -u postgres -- psql -v ON_ERROR_STOP=1'
   if ! $psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'" | grep -q 1; then
     $psql -c "CREATE ROLE \"$DB_USER\" LOGIN PASSWORD '$DB_PASS';" >/dev/null
     info "创建角色 $DB_USER"
   fi
   $psql -c "ALTER ROLE \"$DB_USER\" PASSWORD '$DB_PASS';" >/dev/null
   if ! $psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" | grep -q 1; then
-    sudo -u postgres createdb -O "$DB_USER" "$DB_NAME"
+    runuser -u postgres -- createdb -O "$DB_USER" "$DB_NAME"
     info "创建数据库 $DB_NAME（owner=$DB_USER）"
   fi
   # PG15 起 public schema 默认不让非 owner 建表；把 public 归给应用角色，确保 payload migrate 能建表

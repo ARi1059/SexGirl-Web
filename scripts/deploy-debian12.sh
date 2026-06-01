@@ -92,6 +92,7 @@ ENV_FILE="$APP_DIR/.env"
 SERVICE_FILE="/etc/systemd/system/${APP_NAME}.service"
 NGINX_SITE="/etc/nginx/sites-available/${APP_NAME}"
 export DEBIAN_FRONTEND=noninteractive
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0   # corepack 静默下载 packageManager 指定的 pnpm 版本（不弹确认）
 
 # ── 日志小工具 ───────────────────────────────────────────────────────────────
 c_blue='\033[1;34m'; c_green='\033[1;32m'; c_yellow='\033[1;33m'; c_red='\033[1;31m'; c_off='\033[0m'
@@ -157,11 +158,11 @@ install_system_deps() {
   fi
   info "Node $(node -v)"
 
-  # corepack 自带于 Node，启用后 pnpm 全局可用（项目 DEPLOY.md / vercel.json 约定 pnpm）
+  # corepack 自带于 Node；pnpm 版本由项目 package.json 的 packageManager 字段锁定（pnpm@9.15.0，
+  # 匹配 lockfileVersion 9.0）。corepack 在 APP_DIR 跑 pnpm 时按字段自动下载并使用该版本。
   corepack enable >/dev/null 2>&1 || npm i -g corepack >/dev/null 2>&1 || true
-  corepack prepare pnpm@latest --activate >/dev/null 2>&1 || true
-  command -v pnpm >/dev/null || die "pnpm 未就绪（corepack 启用失败）。"
-  info "pnpm $(pnpm -v)"
+  command -v corepack >/dev/null || die "corepack 未就绪。"
+  info "corepack 就绪（pnpm 版本由 packageManager 字段锁定）"
 }
 
 # ── 2. Postgres：角色 + 库（幂等）────────────────────────────────────────────
@@ -281,6 +282,7 @@ build_app() {
   if [ "$RUN_SEED" = "1" ]; then seed_cmd="&& echo '↻ 跑 seed 示例数据' && pnpm seed"; fi
   runuser -u "$APP_USER" -- bash -lc "
     set -euo pipefail
+    export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
     cd '$APP_DIR'
     set -a; . ./.env; set +a
     if ! pnpm install --frozen-lockfile; then

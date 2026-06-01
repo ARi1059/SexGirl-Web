@@ -52,7 +52,7 @@ export function Gallery({ products }: { products: Product[] }) {
               {/* 收藏按钮作为 <Link> 的同级覆盖在封面上：避免 <button> 嵌进 <a>（非法交互嵌套）。 */}
               <FavoriteButton
                 productId={p.id}
-                className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full border border-line bg-paper/70 backdrop-blur"
+                className="absolute right-3 top-3 z-10 h-9 w-9 rounded-[2px] border border-line bg-paper/70 backdrop-blur"
               />
             </motion.div>
           </li>

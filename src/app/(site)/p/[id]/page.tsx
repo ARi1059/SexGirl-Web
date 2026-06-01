@@ -85,7 +85,7 @@ export default async function ProductDetailPage({
             <FavoriteButton
               productId={product.id}
               size={24}
-              className="mt-1 h-11 w-11 shrink-0 rounded-full border border-line bg-paper"
+              className="mt-1 h-11 w-11 shrink-0 rounded-[2px] border border-line bg-paper"
             />
           </div>
 

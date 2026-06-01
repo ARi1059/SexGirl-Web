@@ -68,6 +68,7 @@ export interface Config {
   blocks: {};
   collections: {
     products: Product;
+    categories: Category;
     contacts: Contact;
     media: Media;
     users: User;
@@ -79,6 +80,7 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     products: ProductsSelect<false> | ProductsSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
     contacts: ContactsSelect<false> | ContactsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -152,7 +154,15 @@ export interface Product {
     | null;
   published?: boolean | null;
   availableToday?: boolean | null;
+  /**
+   * 「今日可接单」开启时卡片 / 详情显示的文字，可自定义（如「今日可约」）。
+   */
+  availableTodayText?: string | null;
   statusText?: string | null;
+  /**
+   * 前台分类页 /c/<slug> 据此筛选；可在「分类」集合维护类型。
+   */
+  category?: (number | null) | Category;
   sortOrder?: number | null;
   tags?:
     | (
@@ -253,6 +263,21 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  name: string;
+  /**
+   * 用于分类页 /c/<slug>；留空将由类型名自动生成。纯中文类型名无法自动生成，请手填英文（如 evening-gown）。
+   */
+  slug?: string | null;
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "contacts".
  */
 export interface Contact {
@@ -318,6 +343,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'products';
         value: number | Product;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
       } | null)
     | ({
         relationTo: 'contacts';
@@ -389,7 +418,9 @@ export interface ProductsSelect<T extends boolean = true> {
       };
   published?: T;
   availableToday?: T;
+  availableTodayText?: T;
   statusText?: T;
+  category?: T;
   sortOrder?: T;
   tags?:
     | T
@@ -428,6 +459,17 @@ export interface ProductsSelect<T extends boolean = true> {
             };
       };
   contacts?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -43,6 +43,10 @@ export default async function ProductDetailPage({
   const product = await getProductById(numId);
   if (!product || !product.published) notFound(); // 未上架在前台不可见（设计规范 §6.2）
 
+  // depth 2 已展开 category 为对象；可点眉标跳对应分类页（详情无外层 <Link>，可安全嵌 <a>）。
+  const category =
+    product.category && typeof product.category === "object" ? product.category : null;
+
   return (
     <div className="mx-auto max-w-[1440px] px-[clamp(20px,5vw,96px)] py-[clamp(32px,6vw,80px)]">
       <Link
@@ -59,9 +63,21 @@ export default async function ProductDetailPage({
           <Carousel product={product} />
         </div>
 
-        {/* 右：状态 / 标题 / 标签 / 富文本 / 联系方式 */}
+        {/* 右：分类眉标 / 状态 / 标题 / 标签 / 富文本 / 联系方式 */}
         <div>
-          <StatusBadge availableToday={product.availableToday} statusText={product.statusText} />
+          {category?.slug ? (
+            <Link
+              href={`/c/${category.slug}`}
+              className="draw-underline mb-2 inline-block text-overline uppercase text-ink-muted transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]"
+            >
+              {category.name}
+            </Link>
+          ) : null}
+          <StatusBadge
+            availableToday={product.availableToday}
+            availableTodayText={product.availableTodayText}
+            statusText={product.statusText}
+          />
           <h1 className="mt-3 font-display text-h1 font-semibold">{product.title}</h1>
 
           <TagRenderer tags={product.tags} className="mt-5" />

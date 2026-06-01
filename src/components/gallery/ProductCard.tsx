@@ -37,7 +37,11 @@ export function ProductCard({ product, feature = false }: { product: Product; fe
       </ViewTransition>
 
       <div className="mt-4 border-t border-line pt-4">
-        <StatusBadge availableToday={product.availableToday} statusText={product.statusText} />
+        <StatusBadge
+          availableToday={product.availableToday}
+          availableTodayText={product.availableTodayText}
+          statusText={product.statusText}
+        />
         <h3 className="mt-2 font-display text-h2 font-semibold leading-tight">
           <span className="draw-underline">{product.title}</span>
         </h3>

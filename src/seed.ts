@@ -88,8 +88,10 @@ const seed = async (): Promise<void> => {
   }
 
   // ── 清理旧数据（顺序：先解除引用方）────────────────────────────────
-  payload.logger.info('🧹 清空 products / contacts / media …')
+  // products 引用 categories/contacts/media，故先删 products，再删被引用集合。
+  payload.logger.info('🧹 清空 products / categories / contacts / media …')
   await payload.delete({ collection: 'products', where: { id: { greater_than: 0 } } })
+  await payload.delete({ collection: 'categories', where: { id: { greater_than: 0 } } })
   await payload.delete({ collection: 'contacts', where: { id: { greater_than: 0 } } })
   await payload.delete({ collection: 'media', where: { id: { greater_than: 0 } } })
 
@@ -115,6 +117,19 @@ const seed = async (): Promise<void> => {
   const all = [wechat, wechatQr, qq, qqQr]
   payload.logger.info('📇 已创建 4 个客服联系方式')
 
+  // ── M6 商品类型 / 分类 ×4（slug 驱动前台 /c/[slug] 与分类导航）─────────
+  const categoryDefs = [
+    { name: '晚礼服', slug: 'evening-gown', sortOrder: 40 },
+    { name: '旗袍', slug: 'qipao', sortOrder: 30 },
+    { name: '配饰', slug: 'accessory', sortOrder: 20 },
+    { name: '披肩', slug: 'shawl', sortOrder: 10 },
+  ]
+  const catId: Record<string, number> = {}
+  for (const c of categoryDefs) {
+    catId[c.slug] = (await payload.create({ collection: 'categories', data: c })).id
+  }
+  payload.logger.info(`🏷️  已创建 ${categoryDefs.length} 个商品类型`)
+
   // ── M1-6 商品 ×6：标签覆盖 text/icon/colorBlock/link，状态字段各异 ───
   const specs: {
     title: string
@@ -123,7 +138,9 @@ const seed = async (): Promise<void> => {
     hue: number
     published: boolean
     availableToday: boolean
+    availableTodayText?: string
     statusText: string
+    category: string
     tags: Tag[]
     contacts: number[]
   }[] = [
@@ -133,7 +150,9 @@ const seed = async (): Promise<void> => {
       hue: 320,
       published: true,
       availableToday: true,
-      statusText: '今日可制作',
+      availableTodayText: '今日可接单',
+      statusText: '',
+      category: 'evening-gown',
       desc: ['垂坠真丝缎面，星点亮片手工缀钉。', '可按身形定制，工期约 7–10 天。'],
       tags: [
         { blockType: 'text', label: '热销', style: { color: '#ffffff', bg: '#e11d48' } },
@@ -148,6 +167,7 @@ const seed = async (): Promise<void> => {
       published: true,
       availableToday: false,
       statusText: '需预约 3 天',
+      category: 'accessory',
       desc: ['法式蕾丝叠层，搭配淡水珍珠。', '适合婚礼、写真与日常通勤。'],
       tags: [
         { blockType: 'colorBlock', label: '限量', style: { color: '#ffffff', bg: '#7c3aed' } },
@@ -161,7 +181,9 @@ const seed = async (): Promise<void> => {
       hue: 12,
       published: true,
       availableToday: true,
-      statusText: '限量 2 件',
+      availableTodayText: '今日可定制',
+      statusText: '',
+      category: 'qipao',
       desc: ['织锦提花面料，立体盘扣工艺。', '提供量体定制与改良版型。'],
       tags: [
         { blockType: 'icon', label: '高定剪裁', icon: 'Scissors' },
@@ -176,6 +198,7 @@ const seed = async (): Promise<void> => {
       published: true,
       availableToday: false,
       statusText: '已约满',
+      category: 'shawl',
       desc: ['羊绒混纺，手工立体刺绣花卉。', '当前档期已满，可预约下一批。'],
       tags: [
         { blockType: 'text', label: '经典', style: { color: '#ffffff', bg: '#0f766e' } },
@@ -189,7 +212,9 @@ const seed = async (): Promise<void> => {
       hue: 40,
       published: true,
       availableToday: true,
-      statusText: '热卖中',
+      availableTodayText: '今日可发货',
+      statusText: '',
+      category: 'accessory',
       desc: ['真丝绢面手绘，紫檀扇骨。', '附赠礼盒与定制题字服务。'],
       tags: [
         { blockType: 'text', label: '人气', style: { color: '#ffffff', bg: '#d97706' } },
@@ -206,6 +231,7 @@ const seed = async (): Promise<void> => {
       published: false,
       availableToday: false,
       statusText: '即将上架',
+      category: 'accessory',
       desc: ['100% 桑蚕丝，独立插画师手绘稿。', '新系列预告，敬请期待。'],
       tags: [
         { blockType: 'icon', label: '即将上架', icon: 'Clock' },
@@ -230,7 +256,9 @@ const seed = async (): Promise<void> => {
         images: [{ image: detail1 }, { image: detail2 }],
         published: s.published,
         availableToday: s.availableToday,
+        availableTodayText: s.availableTodayText,
         statusText: s.statusText,
+        category: catId[s.category],
         sortOrder,
         tags: s.tags,
         contacts: s.contacts,
@@ -241,7 +269,7 @@ const seed = async (): Promise<void> => {
   }
 
   await rm(TMP, { recursive: true, force: true })
-  payload.logger.info('🎉 Seed 完成：6 商品 / 4 客服 / 20 媒体')
+  payload.logger.info('🎉 Seed 完成：6 商品 / 4 类型 / 4 客服 / 20 媒体')
 }
 
 try {

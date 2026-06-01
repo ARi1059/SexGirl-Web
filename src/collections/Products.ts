@@ -8,7 +8,7 @@ export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'published', 'availableToday', 'sortOrder'],
+    defaultColumns: ['title', 'published', 'availableToday', 'category', 'sortOrder'],
   },
   access: { read: () => true, create: isAdmin, update: isAdmin, delete: isAdmin },
   hooks: {
@@ -26,8 +26,24 @@ export const Products: CollectionConfig = {
       fields: [{ name: 'image', type: 'upload', relationTo: 'media' }],
     },
     { name: 'published', type: 'checkbox', defaultValue: false, index: true, label: '上架' },
-    { name: 'availableToday', type: 'checkbox', defaultValue: false, label: '今日可制作' },
+    { name: 'availableToday', type: 'checkbox', defaultValue: false, label: '今日可接单' },
+    {
+      name: 'availableTodayText',
+      type: 'text',
+      defaultValue: '今日可接单',
+      label: '可接单文案',
+      admin: {
+        description: '「今日可接单」开启时卡片 / 详情显示的文字，可自定义（如「今日可约」）。',
+      },
+    },
     { name: 'statusText', type: 'text', label: '自定义状态文字（如：已约满）' },
+    {
+      name: 'category',
+      type: 'relationship',
+      relationTo: 'categories',
+      label: '商品类型',
+      admin: { description: '前台分类页 /c/<slug> 据此筛选；可在「分类」集合维护类型。' },
+    },
     { name: 'sortOrder', type: 'number', defaultValue: 0, index: true, label: '排序权重' },
     {
       name: 'tags',

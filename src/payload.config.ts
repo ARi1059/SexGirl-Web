@@ -12,6 +12,8 @@ import { Media } from './collections/Media'
 import { Contacts } from './collections/Contacts'
 import { Products } from './collections/Products'
 import { Categories } from './collections/Categories'
+import { Customers } from './collections/Customers'
+import { Favorites } from './collections/Favorites'
 import { resetAvailableToday } from './endpoints/resetAvailableToday'
 
 const filename = fileURLToPath(import.meta.url)
@@ -45,7 +47,7 @@ export default buildConfig({
       beforeDashboard: ['/components/admin/ResetAvailableTodayButton#ResetAvailableTodayButton'],
     },
   },
-  collections: [Products, Categories, Contacts, Media, Users],
+  collections: [Products, Categories, Contacts, Media, Customers, Favorites, Users],
   // 自定义 REST 端点：POST /api/reset-available-today（默认挂在 routes.api='/api' 下）。
   endpoints: [resetAvailableToday],
   editor: lexicalEditor(),

@@ -7,6 +7,7 @@ import { Carousel } from "@/components/gallery/Carousel";
 import { StatusBadge } from "@/components/gallery/StatusBadge";
 import { TagRenderer } from "@/components/renderers/TagRenderer";
 import { ContactSection } from "@/components/contact/ContactSection";
+import { FavoriteButton } from "@/components/favorite/FavoriteButton";
 
 // 商品详情页 /p/[id]（开发计划 M3-5）。ISR + 构建期预渲染已上架商品。
 export const revalidate = 3600;
@@ -78,7 +79,15 @@ export default async function ProductDetailPage({
             availableTodayText={product.availableTodayText}
             statusText={product.statusText}
           />
-          <h1 className="mt-3 font-display text-h1 font-semibold">{product.title}</h1>
+          <div className="mt-3 flex items-start justify-between gap-4">
+            <h1 className="font-display text-h1 font-semibold">{product.title}</h1>
+            {/* 详情无外层 <Link>，收藏按钮可直接放置（开发计划 M7-8）。 */}
+            <FavoriteButton
+              productId={product.id}
+              size={24}
+              className="mt-1 h-11 w-11 shrink-0 rounded-full border border-line bg-paper"
+            />
+          </div>
 
           <TagRenderer tags={product.tags} className="mt-5" />
 

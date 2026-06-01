@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import type { Product } from "@/payload-types";
 import { ProductCard } from "./ProductCard";
+import { FavoriteButton } from "@/components/favorite/FavoriteButton";
 
 /**
  * 画廊网格（设计规范 §4 / §7，开发计划 M3-3/M3-6）。
@@ -32,6 +33,7 @@ export function Gallery({ products }: { products: Product[] }) {
         return (
           <li key={p.id} className={feature ? "card card--feature" : "card"}>
             <motion.div
+              className="relative"
               initial={reduce ? { opacity: 0 } : { opacity: 0, y: 20 }}
               whileInView={reduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "0px 0px -10% 0px" }}
@@ -47,6 +49,11 @@ export function Gallery({ products }: { products: Product[] }) {
               >
                 <ProductCard product={p} feature={feature} />
               </Link>
+              {/* 收藏按钮作为 <Link> 的同级覆盖在封面上：避免 <button> 嵌进 <a>（非法交互嵌套）。 */}
+              <FavoriteButton
+                productId={p.id}
+                className="absolute right-3 top-3 z-10 h-9 w-9 rounded-full border border-line bg-paper/70 backdrop-blur"
+              />
             </motion.div>
           </li>
         );

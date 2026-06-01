@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { isAdmin } from '../access/roles'
 import { revalidateProduct, revalidateProductDelete } from '../hooks/revalidateProduct'
+import { cleanupFavoritesByProduct } from '../hooks/cleanupFavorites'
 import { TextTag, IconTag, ColorBlockTag, LinkTag } from '../blocks/tagBlocks'
 
 // 商品（数据模型见开发文档 §4）。标签用 blocks，客服用关系，动态状态字段独立。
@@ -13,6 +14,7 @@ export const Products: CollectionConfig = {
   access: { read: () => true, create: isAdmin, update: isAdmin, delete: isAdmin },
   hooks: {
     afterChange: [revalidateProduct],
+    beforeDelete: [cleanupFavoritesByProduct],
     afterDelete: [revalidateProductDelete],
   },
   fields: [

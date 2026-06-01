@@ -68,9 +68,17 @@ REPO_URL="${REPO_URL:-https://github.com/ARi1059/SexGirl-Web.git}"
 GIT_REF="${GIT_REF:-}"
 GIT_PULL="${GIT_PULL:-0}"              # 就地部署时是否先 git pull
 DOMAIN="${DOMAIN:-}"
+# DOMAINS：空格分隔的域名列表（第一个默认作规范域）。兼容旧的单个 DOMAIN。
+DOMAINS="${DOMAINS:-$DOMAIN}"
+CANONICAL="${CANONICAL:-}"             # 规范主域；留空＝取 DOMAINS 第一个，其余 301 跳到它
 SERVER_URL="${SERVER_URL-}"            # 注意用 - 不用 :- ，允许显式空值
+# TLS_MODE：none(仅HTTP) | origin(Cloudflare Origin 证书) | letsencrypt(certbot 直签)
+TLS_MODE="${TLS_MODE:-none}"
 ENABLE_TLS="${ENABLE_TLS:-0}"
+if [ "$ENABLE_TLS" = "1" ]; then TLS_MODE="letsencrypt"; fi   # 兼容旧参数：ENABLE_TLS=1 等价 letsencrypt
 CERTBOT_EMAIL="${CERTBOT_EMAIL:-}"
+TLS_CERT="${TLS_CERT:-/etc/ssl/cloudflare/${APP_NAME}.pem}"   # origin 模式：Cloudflare Origin 证书路径
+TLS_KEY="${TLS_KEY:-/etc/ssl/cloudflare/${APP_NAME}.key}"     # origin 模式：对应私钥路径
 NGINX_MAX_BODY="${NGINX_MAX_BODY:-64m}"
 CREATE_SWAP="${CREATE_SWAP:-auto}"
 RUN_SEED="${RUN_SEED:-0}"
@@ -92,11 +100,20 @@ env_get() { [ -f "$ENV_FILE" ] && sed -n "s/^$1=//p" "$ENV_FILE" | head -n1 || t
 
 # ── 0. 校验 + swap ───────────────────────────────────────────────────────────
 [ -f /etc/debian_version ] || warn "未检测到 Debian，脚本针对 Debian 12 编写，其它发行版可能需调整。"
-if [ "$ENABLE_TLS" = "1" ]; then
-  [ -n "$DOMAIN" ] || die "ENABLE_TLS=1 需要同时设 DOMAIN（真实域名，且已解析到本机）。"
-  [ -n "$CERTBOT_EMAIL" ] || die "ENABLE_TLS=1 需要同时设 CERTBOT_EMAIL。"
-  case "$DOMAIN" in *[a-zA-Z]*) : ;; *) die "ENABLE_TLS=1 的 DOMAIN 必须是域名，不能是纯 IP。" ;; esac
-fi
+if [ -z "$CANONICAL" ]; then CANONICAL="${DOMAINS%% *}"; fi   # 规范域默认取列表第一个
+case "$TLS_MODE" in
+  none) : ;;
+  letsencrypt)
+    [ -n "$DOMAINS" ] || die "TLS_MODE=letsencrypt 需要设 DOMAIN 或 DOMAINS。"
+    [ -n "$CERTBOT_EMAIL" ] || die "TLS_MODE=letsencrypt 需要设 CERTBOT_EMAIL。"
+    ;;
+  origin)
+    [ -n "$DOMAINS" ] || die "TLS_MODE=origin 需要设 DOMAIN 或 DOMAINS。"
+    [ -f "$TLS_CERT" ] || die "找不到证书 $TLS_CERT —— 先把 Cloudflare Origin 证书传到这里（或用 TLS_CERT= 指定路径）。"
+    [ -f "$TLS_KEY" ]  || die "找不到私钥 $TLS_KEY —— 先放置（或用 TLS_KEY= 指定）。"
+    ;;
+  *) die "TLS_MODE 只能是 none | origin | letsencrypt（当前：$TLS_MODE）。" ;;
+esac
 
 maybe_swap() {
   step "检查内存 / swap"
@@ -310,47 +327,116 @@ EOF
     || { warn "服务未能启动，最近日志："; journalctl -u "$APP_NAME" -n 30 --no-pager || true; die "启动失败。"; }
 }
 
-# ── 8. Nginx 反代（+ 可选 certbot）──────────────────────────────────────────
+# ── Cloudflare 回源真实 IP（origin 模式）：把 $remote_addr 还原为访客真实 IP ──
+write_cloudflare_realip() {
+  cat > /etc/nginx/conf.d/cloudflare-realip.conf <<'EOF'
+# Cloudflare 回源 IP 段（取 CF-Connecting-IP 还原访客真实 IP，便于日志/限流）。
+# 官方列表：https://www.cloudflare.com/ips/ ，更新后可同步本文件。
+set_real_ip_from 173.245.48.0/20;
+set_real_ip_from 103.21.244.0/22;
+set_real_ip_from 103.22.200.0/22;
+set_real_ip_from 103.31.4.0/22;
+set_real_ip_from 141.101.64.0/18;
+set_real_ip_from 108.162.192.0/18;
+set_real_ip_from 190.93.240.0/20;
+set_real_ip_from 188.114.96.0/20;
+set_real_ip_from 197.234.240.0/22;
+set_real_ip_from 198.41.128.0/17;
+set_real_ip_from 162.158.0.0/15;
+set_real_ip_from 104.16.0.0/13;
+set_real_ip_from 104.24.0.0/14;
+set_real_ip_from 172.64.0.0/13;
+set_real_ip_from 131.0.72.0/22;
+set_real_ip_from 2400:cb00::/32;
+set_real_ip_from 2606:4700::/32;
+set_real_ip_from 2803:f800::/32;
+set_real_ip_from 2405:b500::/32;
+set_real_ip_from 2405:8100::/32;
+set_real_ip_from 2a06:98c0::/29;
+set_real_ip_from 2c0f:f248::/32;
+real_ip_header CF-Connecting-IP;
+EOF
+}
+
+# ── 8. Nginx 反代（按 TLS_MODE：none / origin / letsencrypt）──────────────────
 setup_nginx() {
-  step "配置 Nginx 反向代理"
-  local server_name="${DOMAIN:-_}"
+  step "配置 Nginx 反向代理（TLS_MODE=${TLS_MODE}）"
+  local names="${DOMAINS:-_}"
+
+  # 共用反代片段：被各 server 块 include，避免重复。
   # client_max_body_size 关键：无 S3 时后台上传经 Node，Nginx 默认 1M 会拦大图。
-  cat > "$NGINX_SITE" <<EOF
+  cat > "/etc/nginx/snippets/${APP_NAME}.conf" <<EOF
+client_max_body_size ${NGINX_MAX_BODY};
+location / {
+    proxy_pass http://127.0.0.1:${APP_PORT};
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_read_timeout 300s;
+    proxy_buffering off;
+}
+EOF
+
+  if [ "$TLS_MODE" = "origin" ]; then
+    write_cloudflare_realip
+    cat > "$NGINX_SITE" <<EOF
+# HTTP → 跳 HTTPS 规范域（CF Full 实际回源走 443，此处兜底）
 server {
     listen 80;
     listen [::]:80;
-    server_name ${server_name};
+    server_name ${names};
+    return 301 https://${CANONICAL}\$request_uri;
+}
+# HTTPS：Cloudflare Origin 证书；非规范域 301 跳规范域
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl;
+    server_name ${names};
 
-    client_max_body_size ${NGINX_MAX_BODY};
+    ssl_certificate     ${TLS_CERT};
+    ssl_certificate_key ${TLS_KEY};
 
-    location / {
-        proxy_pass http://127.0.0.1:${APP_PORT};
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_read_timeout 300s;
-        proxy_buffering off;
-    }
+    if (\$host != ${CANONICAL}) { return 301 https://${CANONICAL}\$request_uri; }
+
+    include snippets/${APP_NAME}.conf;
 }
 EOF
-  ln -sf "$NGINX_SITE" "/etc/nginx/sites-enabled/${APP_NAME}"
-  rm -f /etc/nginx/sites-enabled/default   # 移除默认站，避免 server_name _ 冲突
-  nginx -t >/dev/null 2>&1 || die "nginx 配置测试失败（nginx -t 看详情）。"
-  systemctl reload nginx
-  info "Nginx 已反代 80 → 127.0.0.1:${APP_PORT}"
+  else
+    # none / letsencrypt 先落 HTTP（letsencrypt 之后由 certbot 改写加 443）
+    cat > "$NGINX_SITE" <<EOF
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${names};
+    include snippets/${APP_NAME}.conf;
+}
+EOF
+  fi
 
-  if [ "$ENABLE_TLS" = "1" ]; then
-    step "申请 HTTPS 证书（certbot）"
+  ln -sf "$NGINX_SITE" "/etc/nginx/sites-enabled/${APP_NAME}"
+  rm -f /etc/nginx/sites-enabled/default   # 移除默认站，避免 server_name 冲突
+  nginx -t >/dev/null 2>&1 || { nginx -t; die "nginx 配置测试失败。"; }
+  systemctl reload nginx
+  info "Nginx 就绪（server_name：${names}）"
+
+  if [ "$TLS_MODE" = "letsencrypt" ]; then
+    step "申请 Let's Encrypt 证书（certbot）"
     apt-get install -y -qq certbot python3-certbot-nginx >/dev/null
-    if certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$CERTBOT_EMAIL" --redirect; then
-      info "已为 $DOMAIN 签发证书并开启 80→443 跳转（自动续期由 certbot.timer 接管）"
+    local d cargs=""
+    for d in $DOMAINS; do cargs="$cargs -d $d"; done
+    if certbot --nginx $cargs --non-interactive --agree-tos -m "$CERTBOT_EMAIL" --redirect; then
+      info "已签发证书并开启 HTTPS 跳转（续期由 certbot.timer 接管）"
     else
-      warn "certbot 失败（域名是否已解析到本机？80 端口是否可达？）。HTTP 仍可用，可稍后重试。"
+      warn "certbot 失败（域名是否已 DNS only 直连本机？80 端口可达？）。HTTP 仍可用。"
     fi
+  fi
+
+  if [ "$TLS_MODE" = "origin" ]; then
+    info "已用 Cloudflare Origin 证书启 443。记得在 Cloudflare 把 SSL/TLS 模式设为 Full (strict)。"
   fi
 }
 
@@ -368,9 +454,9 @@ setup_nginx
 
 # ── 结语 ─────────────────────────────────────────────────────────────────────
 ip_addr="$(hostname -I 2>/dev/null | awk '{print $1}')"
-if [ "$ENABLE_TLS" = "1" ]; then access_url="https://${DOMAIN}"
-elif [ -n "$DOMAIN" ];        then access_url="http://${DOMAIN}"
-else                               access_url="http://${ip_addr:-<服务器IP>}"
+if [ "$TLS_MODE" != "none" ] && [ -n "$CANONICAL" ]; then access_url="https://${CANONICAL}"
+elif [ -n "$CANONICAL" ];                            then access_url="http://${CANONICAL}"
+else                                                      access_url="http://${ip_addr:-<服务器IP>}"
 fi
 cat <<EOF
 

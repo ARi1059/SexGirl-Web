@@ -1,4 +1,13 @@
-# 部署上线 Runbook（M5）
+# 部署上线 Runbook
+
+> 本项目支持两条部署路线，**按需选一条**：
+>
+> - **路线 A · Vercel + Supabase** —— serverless 托管，零运维、自动伸缩、全球 CDN，适合不想碰服务器。见下方 §0–§M5-4。
+> - **路线 B · Debian 12 自托管 + Cloudflare** —— 一键脚本 [scripts/deploy-debian12.sh](scripts/deploy-debian12.sh)，单机可控、成本固定，适合自己的 VPS。见文末「路线 B」。
+
+---
+
+## 路线 A · Vercel + Supabase
 
 > 平台：**Vercel**（Next 16 + Payload serverless）+ **Supabase**（Postgres + Storage）。
 > 配套：[开发计划.md](开发计划.md) M5、[开发文档.md](开发文档.md) §9.2。
@@ -78,3 +87,94 @@
 - 改了集合 schema 后：本地 `pnpm payload migrate:create <名>` 生成新迁移并提交进仓库；下次 Vercel 构建 `build:deploy` 会自动应用。
 - 迁移文件按目录被读取（`src/migrations/*.ts`，`index.ts` 除外），无需手动登记。
 - 本地构建冒烟用 `pnpm build`（纯 `next build`，不碰数据库）；`build:deploy` 仅供 Vercel/带库环境。
+
+---
+
+## 路线 B · 自托管（Debian 12 + Cloudflare）
+
+> 一键脚本：[scripts/deploy-debian12.sh](scripts/deploy-debian12.sh)。**本地 Postgres + 本地磁盘媒体 + systemd + Nginx + pnpm**，幂等可重跑。
+> 与路线 A 的差异：跑在你自己的 VPS 上，成本固定、数据自持，但备份与安全更新需自己负责。
+
+### B-0 · 红线（先看）
+
+- **证书 / DNS 必须先行**：`origin` 模式跑脚本前，先在 Cloudflare 配好域名记录、生成 Origin 证书并传到 VPS——脚本会校验证书文件，缺失直接退出。
+- **`NEXT_PUBLIC_SERVER_URL` 留空**：脚本默认留空，媒体走同源相对路径 `/api/media/file/*`，`next/image` 无需 `remotePatterns`、也不触发私有 IP 的 SSRF 拦截。设成域名反而要改 `next.config.ts` 白名单，否则图裂。
+- **加密模式设 Full (strict)**：装了 Origin 证书后，Cloudflare 若仍是 **Flexible** 会重定向循环；Full(strict) 才会用并校验源站证书。
+- **不暴露源站直连**：用了 Cloudflare 就让流量全走 CF（橙云）。可选用脚本写入的 `/etc/nginx/conf.d/cloudflare-realip.conf` 同款 CF IP 段做防火墙白名单，只放行 CF 回源。
+- 同路线 A：**不加 `output: standalone/export`**（破坏 `/api/*`）、**`PAYLOAD_SECRET` 不轮换**（脚本首次生成写入 `.env`，重跑保留）。
+
+### B-1 · VPS 配置建议
+
+- **推荐 2 vCPU / 2GB RAM / 40GB SSD**，Debian 12。1GB 也能跑——脚本检测到内存 <2G 会自动建 2G swap 扛过 `next build`（构建是内存大头，峰值约 1.5–2G）。
+- 磁盘占用：`node_modules` ~1.1G + `.next` + Postgres + 媒体（每图存原图 + 3 尺寸，随上传增长，记得预留与备份）。
+- 流量：图片站建议套 **Cloudflare CDN**（本路线已用），源站 1TB/月 + 100Mbps 共享带宽即可扛十几万 UV/月。
+
+### B-2 · Cloudflare（DNS + 证书 + 加密模式）
+
+1. **DNS → Records**：裸域 `@` 与 `www` 两条 A 记录都指向 `<VPS_IP>`，**都开橙云（Proxied）**。
+2. **SSL/TLS → Origin Server → Create Certificate**：Hostnames 填 `cdsexgirl.com` 与 `*.cdsexgirl.com`，有效期 15 年。复制 **Origin Certificate** 与 **Private Key**（私钥只显示一次）。
+3. **SSL/TLS → Overview → Full (strict)**；建议同时开 **Always Use HTTPS**。
+
+### B-3 · 传证书到 VPS
+
+脚本默认读 `/etc/ssl/cloudflare/<APP_NAME>.pem` 与 `.key`（`APP_NAME` 默认 `sexgirl-web`）：
+
+```bash
+sudo mkdir -p /etc/ssl/cloudflare
+sudo nano /etc/ssl/cloudflare/sexgirl-web.pem    # 粘贴 Origin Certificate
+sudo nano /etc/ssl/cloudflare/sexgirl-web.key    # 粘贴 Private Key
+sudo chmod 600 /etc/ssl/cloudflare/sexgirl-web.key
+```
+
+### B-4 · 拉代码 + 跑脚本
+
+```bash
+sudo apt-get update && sudo apt-get install -y git
+git clone https://github.com/ARi1059/SexGirl-Web.git && cd SexGirl-Web
+
+TLS_MODE=origin DOMAINS="cdsexgirl.com www.cdsexgirl.com" \
+  bash scripts/deploy-debian12.sh
+```
+
+脚本自动 `sudo` 提权，装 Node 22 / pnpm / Postgres / Nginx，建库、**先 `payload migrate` 再 `next build`**、配 systemd 守护与 Nginx（443 用 Origin 证书 + 非规范域 301 跳转 + CF 真实 IP 恢复）。
+
+- 规范域 = `DOMAINS` 第一个（此处裸域），`www` 自动 301 跳裸域；要反向加 `CANONICAL=www.cdsexgirl.com`。
+- 跑完放行防火墙 **80 / 443 / 22**（含云控制台安全组）。
+
+### B-5 · 建超管 + 验证
+
+- 浏览器开 `https://cdsexgirl.com/admin` → **第一个注册账号自动成超管**。
+- `www` 应 301 跳裸域；`systemctl status sexgirl-web`；日志 `journalctl -u sexgirl-web -f`。
+
+### B-6 · 常用环境变量（跑脚本时可覆盖）
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `TLS_MODE` | `none` | `none`(仅HTTP) / `origin`(CF Origin 证书) / `letsencrypt`(certbot 直签) |
+| `DOMAINS` | 空 | 空格分隔的域名列表，第一个为规范域 |
+| `CANONICAL` | 列表首个 | 规范主域，其余 301 跳到它 |
+| `TLS_CERT` `TLS_KEY` | `/etc/ssl/cloudflare/sexgirl-web.{pem,key}` | origin 模式证书 / 私钥路径 |
+| `APP_PORT` | `3000` | Node 本机端口（仅 127.0.0.1，Nginx 反代） |
+| `NGINX_MAX_BODY` | `64m` | 上传体积上限（无 S3 时上传经 Node） |
+| `RUN_SEED` | `0` | `=1` 灌示例数据（会重置 products） |
+| `CREATE_SWAP` | `auto` | 内存 <2G 自动建 2G swap |
+| `DB_NAME` `DB_USER` `DB_PASS` | 据 APP_NAME / 自动生成 | 本地 Postgres 库名 / 用户 / 密码 |
+
+> `letsencrypt` 模式（或旧参数 `ENABLE_TLS=1`）：用于**不挂 Cloudflare 代理**的场景（域名 DNS only 直连 VPS），需额外 `CERTBOT_EMAIL=`。挂了 CF 橙云请用 `origin`。
+
+### B-7 · 运维
+
+- **更新**：`cd /opt/sexgirl-web && GIT_PULL=1 bash scripts/deploy-debian12.sh`（或在你的 clone 目录跑，幂等）。
+- **备份**：`pg_dump sexgirl_web` + 打包 `/opt/sexgirl-web/media`。
+- **证书**：Origin 证书 15 年免维护；CF 边缘证书由 Cloudflare 自动续。
+
+### B-8 · Cloudflare 错误码速查
+
+| 现象 | 原因 / 处理 |
+|---|---|
+| **521** | 源站 443 未起或防火墙未放行 → `ss -tlnp \| grep 443`、查安全组 |
+| **525 / 526** | CF↔源站 TLS 握手失败 → Origin 证书 / 私钥不匹配，或加密模式没设对 |
+| 重定向循环 | 加密模式误设 **Flexible** → 改 **Full (strict)** |
+| 解析不通 | `dig cdsexgirl.com` 看是否解析到 CF IP；裸域 `@` 记录是否漏配 |
+
+> 迁移与本地的关系见上方「附」节，对自托管同样适用（`build:deploy` 会先 `payload migrate` 再 `next build`）。

@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     "UI Style Redesign/**",
     // 第二版 UI 稿（前台改版来源）。设计已整合进 src/app/(site) 与 src/components，此目录仅备查。
     "UI Style Redesign (1)/**",
+    // 第三版 UI 稿（后台商品内联编辑来源）。设计已整合进 src/app/(console) 与 src/components/console，此目录仅备查。
+    "UI Style Redesign(2)/**",
   ]),
 ]);
 

@@ -30,9 +30,12 @@ export async function DashboardStats({ payload }: { payload: Payload }) {
       <div className="brand-dashboard__head">
         <h2 className="brand-dashboard__title">定制商品 · 管理后台</h2>
         <div className="brand-dashboard__actions">
+          {/* 此组件渲染于 Payload 后台 (/cms) 内，深链到同属 Payload 的创建页；
+              用普通 a（整页加载）而非 next/link，故就地关闭该规则。 */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
             className="brand-dashboard__btn brand-dashboard__btn--primary"
-            href="/admin/collections/products/create"
+            href="/cms/collections/products/create"
           >
             ＋ 新建商品
           </a>

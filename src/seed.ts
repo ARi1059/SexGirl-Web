@@ -10,7 +10,7 @@ import type { Product } from '@/payload-types'
 // 开发种子数据（开发计划 M1-5 超管 + M1-6 示例数据）。
 // 运行： pnpm seed  （= payload run src/seed.ts）
 // 幂等：每次先清空 products / contacts / media 再重建；用户只在「零用户」时创建。
-// 图片为 sharp 生成的占位图，正式素材由管理员在 /admin 上传替换。
+// 图片为 sharp 生成的占位图，正式素材由管理员在 /cms 上传替换。
 
 type Lexical = NonNullable<Product['description']>
 type Tag = NonNullable<Product['tags']>[number]
@@ -101,7 +101,7 @@ const seed = async (): Promise<void> => {
     const email = process.env.SEED_ADMIN_EMAIL || 'admin@example.com'
     const password = process.env.SEED_ADMIN_PASSWORD || 'ChangeMe_123!'
     await payload.create({ collection: 'users', data: { email, password, name: '超级管理员', role: 'superadmin' } })
-    payload.logger.info(`👤 已创建超级管理员：${email} / ${password}　（请尽快在 /admin 修改）`)
+    payload.logger.info(`👤 已创建超级管理员：${email} / ${password}　（请尽快在 /cms 修改）`)
   } else {
     payload.logger.info(`👤 已存在 ${userCount} 个用户，跳过超管创建`)
   }

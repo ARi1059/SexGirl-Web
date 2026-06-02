@@ -37,6 +37,13 @@ export default buildConfig({
   // 若后台与公开站点用不同域名，这里要把每个 origin 都列上。
   cors: [serverURL],
   // csrf 无需显式设：sanitize 会自动把 serverURL push 进 csrf 白名单。
+  // Payload 原生后台从默认 /admin 迁到 /cms：把 /admin 让给前台自建的品牌后台
+  //（src/app/(console)/admin/*），原生后台退居 /cms 作「强功能后台」，供商品富文本/
+  // 标签 blocks/媒体上传等复杂编辑深链使用。注意：catch-all 路由目录与 generate:importmap
+  // 的落点都按 routes.admin 推导（src/app/(payload)<routes.admin>/），改这里后须把
+  // (payload)/admin/ 目录改名为 (payload)/cms/ 并重跑 `pnpm generate:importmap`。
+  // routes.api 仍是默认 /api，自建后台与登录端点（/api/users/*）不受影响。
+  routes: { admin: '/cms' },
   admin: {
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },

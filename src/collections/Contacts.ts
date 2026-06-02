@@ -4,7 +4,8 @@ import { isAdmin } from '../access/roles'
 // 客服联系方式（可被多个商品复用）。type 决定填微信/QQ 号还是上传二维码。
 export const Contacts: CollectionConfig = {
   slug: 'contacts',
-  admin: { useAsTitle: 'label', defaultColumns: ['label', 'type', 'value'] },
+  labels: { singular: '客服', plural: '客服联系方式' },
+  admin: { useAsTitle: 'label', defaultColumns: ['label', 'type', 'value'], group: '会员与客服' },
   access: { read: () => true, create: isAdmin, update: isAdmin, delete: isAdmin },
   fields: [
     {

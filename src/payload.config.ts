@@ -40,11 +40,27 @@ export default buildConfig({
   admin: {
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
+    // 后台元数据：浏览器标签后缀 + 自定义 favicon（玫瑰底「定」字，见 public/admin-favicon.svg）。
+    // MetaConfig 透传 Next 的 Metadata，favicon 走标准 icons 字段。
+    meta: {
+      titleSuffix: ' · 定制商品后台',
+      icons: [{ rel: 'icon', type: 'image/svg+xml', url: '/admin-favicon.svg' }],
+    },
     components: {
-      // Dashboard 顶部「今日可制作」批量重置按钮（开发计划 M4-2）。
-      // 路径相对 importMap.baseDir（= src/），#ResetAvailableTodayButton 取命名导出。
+      // 品牌标识：登录页字标 Logo + 导航 monogram Icon（与前台刊头观感一致）。样式见 (payload)/custom.scss。
+      graphics: {
+        Logo: '/components/admin/BrandLogo#BrandLogo',
+        Icon: '/components/admin/BrandIcon#BrandIcon',
+      },
+      // Dashboard 顶部：① 品牌数据面板（统计 + 快捷入口）② 「今日可制作」批量重置按钮（开发计划 M4-2）。
+      // 路径相对 importMap.baseDir（= src/），#Export 取命名导出。
       // 改动后需跑 `pnpm generate:importmap` 重新填充 admin/importMap.js。
-      beforeDashboard: ['/components/admin/ResetAvailableTodayButton#ResetAvailableTodayButton'],
+      beforeDashboard: [
+        '/components/admin/DashboardStats#DashboardStats',
+        '/components/admin/ResetAvailableTodayButton#ResetAvailableTodayButton',
+      ],
+      // 导航底部「查看前台网站」外链（补齐后台缺失的「返回前台」入口）。
+      afterNavLinks: ['/components/admin/ViewSiteNavLink#ViewSiteNavLink'],
     },
   },
   collections: [Products, Categories, Contacts, Media, Customers, Favorites, Users],

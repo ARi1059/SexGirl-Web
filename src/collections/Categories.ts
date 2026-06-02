@@ -15,7 +15,14 @@ const toSlug = (s: string): string =>
 // 与商品自由排列的 tags Blocks 互补：category 是结构化归类，前台据此生成分类页与导航。
 export const Categories: CollectionConfig = {
   slug: 'categories',
-  admin: { useAsTitle: 'name', defaultColumns: ['name', 'slug', 'sortOrder'] },
+  labels: { singular: '分类', plural: '分类' },
+  admin: {
+    useAsTitle: 'name',
+    defaultColumns: ['name', 'slug', 'sortOrder'],
+    group: '内容管理',
+    // 编辑页「预览」按钮 → 前台分类页 /c/<slug>。
+    preview: (doc) => (typeof doc?.slug === 'string' && doc.slug ? `/c/${doc.slug}` : null),
+  },
   access: { read: () => true, create: isAdmin, update: isAdmin, delete: isAdmin },
   hooks: {
     afterChange: [revalidateCategory],

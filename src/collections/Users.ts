@@ -5,7 +5,8 @@ import { isAdmin, isSuperAdmin } from '../access/roles'
 export const Users: CollectionConfig = {
   slug: 'users',
   auth: true,
-  admin: { useAsTitle: 'name', defaultColumns: ['name', 'email', 'role'] },
+  labels: { singular: '管理员', plural: '管理员' },
+  admin: { useAsTitle: 'name', defaultColumns: ['name', 'email', 'role'], group: '系统' },
   access: {
     admin: isAdmin, // 谁能进入 /admin
     read: isAdmin,

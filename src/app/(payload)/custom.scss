@@ -1,1 +1,261 @@
-/* 自定义 Payload 后台样式可写在此处 */
+/* ============================================================================
+   Payload 后台品牌皮肤 —— 与前台 (site) 的「暖纸 + 玫瑰粉」设计规范统一
+   （前台令牌见 src/app/globals.css 与 docs/前端设计规范.md）
+
+   机制（已对照 @payloadcms/ui 3.85 源码）：
+   - Payload 整套色彩由灰阶 --color-base-0(白)…--color-base-1000(黑) 推导；
+     亮色下 --theme-elevation-N = base-N，暗色 html[data-theme='dark'] 下「反转」
+     （elevation-0 ← base-900、elevation-100 ← base-800 …）。故只要重染 base 即全站联动。
+   - 本文件由 (payload)/layout.tsx 以「不带 @layer」方式引入，而 Payload 默认全部位于
+     @layer payload-default —— 无层级样式恒胜过有层级样式，故这里无需 !important。
+   - 后台暗色走属性 html[data-theme='dark']（Payload 自带的主题开关），与前台的 .dark
+     class 相互独立，不要尝试同步。
+   ========================================================================== */
+
+/* ── 字体：镜像前台的「系统字体回退栈」（本环境不联网加载 web 字体）────────────── */
+:root {
+  --font-body: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-serif: "Fraunces", "Noto Serif SC", Georgia, "Songti SC", serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+/* ── 亮色：把灰阶暖染成 纸 → 墨（暖调），锚点取自前台令牌 ──────────────────────── */
+:root {
+  --color-base-0:    #FFFFFF; /* paper   → theme-bg / 输入框底 */
+  --color-base-50:   #FAF7F5; /* surface → 卡片/悬浮底 */
+  --color-base-100:  #F3ECE7; /* panel   */
+  --color-base-150:  #E8E1DC; /* line    → theme-border-color */
+  --color-base-200:  #DCD3CC;
+  --color-base-250:  #CFC5BD;
+  --color-base-300:  #C1B6AD;
+  --color-base-350:  #B2A69D;
+  --color-base-400:  #A2968C;
+  --color-base-450:  #93867C;
+  --color-base-500:  #85786E; /* ≈ ink-subtle */
+  --color-base-550:  #776A61;
+  --color-base-600:  #695D55; /* 次要文字（标签）= elevation-600 */
+  --color-base-650:  #5C5048; /* ≈ ink-muted */
+  --color-base-700:  #4F443D;
+  --color-base-750:  #453B35;
+  --color-base-800:  #3C332E; /* 正文 = theme-text（对比 #fff ≈ 10:1）*/
+  --color-base-850:  #2E2723;
+  --color-base-900:  #211C19;
+  --color-base-950:  #1A1512;
+  --color-base-1000: #15110F; /* ink */
+}
+
+/* ── 暗色：注意 elevation 反转 → 改「高位」base。锚点取自前台暗色令牌 ──────────────
+   elevation-0←base-900(底) · 50←850(输入) · 100←800(面板) · 150←750(描边) · 1000←base-0(正文)。
+   顶部（base-0..300）走暖 taupe（≈ 前台暗色 ink / ink-muted / ink-subtle），
+   底部（base-750..900）走前台暗色面板/描边（略冷），中间平滑过渡。 */
+html[data-theme='dark'] {
+  --color-base-0:   #F4F0EE; /* ink     → 正文 (elevation-1000) */
+  --color-base-50:  #D6CFC9;
+  --color-base-100: #B3A9A3; /* ink-muted */
+  --color-base-150: #988E88;
+  --color-base-200: #7E746F; /* ink-subtle */
+  --color-base-250: #6B635F;
+  --color-base-300: #5C534F;
+  --color-base-350: #4E4A50;
+  --color-base-400: #454048;
+  --color-base-450: #403B43;
+  --color-base-500: #3A363E;
+  --color-base-550: #363139;
+  --color-base-600: #322E37;
+  --color-base-650: #302B34;
+  --color-base-700: #2F2A33;
+  --color-base-750: #2C2730; /* line    → 描边 (elevation-150) */
+  --color-base-800: #262126; /* panel   → 面板 (elevation-100) */
+  --color-base-850: #1C181B; /* surface → 输入框底 (elevation-50) */
+  --color-base-900: #131013; /* paper   → 页面底 (elevation-0) */
+}
+
+/* ── 品牌强调色（玫瑰粉），亮/暗各一套（取自前台 --accent）──────────────────────── */
+:root {
+  --brand-accent:        #C96A72;
+  --brand-accent-strong: #B14E57;
+  --brand-accent-soft:   #F8E8E9;
+  --brand-on-accent:     #FFFFFF;
+}
+html[data-theme='dark'] {
+  --brand-accent:        #E6A0A7;
+  --brand-accent-strong: #EFB9BD;
+  --brand-accent-soft:   #2A2024;
+  --brand-on-accent:     #1A1416;
+}
+
+/* ── 把玫瑰色注入 Payload 自身的「主按钮」与「焦点环」──────────────────────────────
+   主按钮通过局部变量取色（.btn--style-primary{ --bg-color / --color / --hover-bg }），
+   直接改这些局部变量即可，稳健不脆弱。焦点环统一为玫瑰色（与前台 --focus 一致）。 */
+.btn--style-primary {
+  --bg-color: var(--brand-accent);
+  --color: var(--brand-on-accent);
+  --hover-bg: var(--brand-accent-strong);
+  --hover-color: var(--brand-on-accent);
+}
+:root {
+  --accessibility-outline: 2px solid var(--brand-accent);
+}
+
+/* ============================================================================
+   自定义组件样式（对应 src/components/admin/* 与 collections 字段 Cell）
+   ========================================================================== */
+
+/* 登录页字标（BrandLogo） */
+.brand-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+.brand-logo__word {
+  font-family: var(--font-serif);
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--theme-elevation-1000);
+}
+.brand-logo__sub {
+  font-size: 0.78rem;
+  letter-spacing: 0.34em;
+  padding-left: 0.34em; /* 抵消字间距造成的视觉左偏 */
+  color: var(--theme-elevation-500);
+}
+
+/* 导航品牌图标（BrandIcon）：玫瑰底白字的圆角方块 monogram */
+.brand-icon {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--style-radius-s);
+  background: var(--brand-accent);
+  color: var(--brand-on-accent);
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+/* 仪表盘品牌面板（DashboardStats） */
+.brand-dashboard {
+  margin-bottom: calc(var(--base) * 1.5);
+}
+.brand-dashboard__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--base);
+  margin-bottom: var(--base);
+}
+.brand-dashboard__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--theme-elevation-1000);
+}
+.brand-dashboard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.brand-dashboard__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.5em 1em;
+  border: 1px solid var(--theme-border-color);
+  border-radius: var(--style-radius-s);
+  color: var(--theme-elevation-800);
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+.brand-dashboard__btn:hover {
+  background: var(--theme-elevation-50);
+}
+.brand-dashboard__btn--primary,
+.brand-dashboard__btn--primary:hover {
+  background: var(--brand-accent);
+  border-color: var(--brand-accent);
+  color: var(--brand-on-accent);
+}
+.brand-dashboard__btn--primary:hover {
+  background: var(--brand-accent-strong);
+  border-color: var(--brand-accent-strong);
+}
+.brand-dashboard__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--base);
+}
+@media (max-width: 1024px) {
+  .brand-dashboard__stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .brand-dashboard__stats { grid-template-columns: 1fr; }
+}
+.brand-dashboard__card {
+  padding: calc(var(--base) * 0.9) calc(var(--base) * 1.1);
+  background: var(--theme-elevation-50);
+  border: 1px solid var(--theme-border-color);
+  border-radius: var(--style-radius-m);
+}
+.brand-dashboard__value {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--theme-elevation-1000);
+}
+.brand-dashboard__label {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--theme-elevation-600);
+}
+
+/* 商品列表「封面图」列缩略图（CoverCell） */
+.brand-cover {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--style-radius-s);
+  background: var(--theme-elevation-100);
+}
+.brand-cover--empty {
+  display: inline-grid;
+  place-items: center;
+  color: var(--theme-elevation-400);
+  font-size: 1rem;
+}
+
+/* 状态药丸（BoolPillCell：published / availableToday） */
+.brand-pill {
+  display: inline-block;
+  padding: 0.15em 0.7em;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.brand-pill--on  { background: var(--theme-success-100); color: var(--theme-success-600); }
+.brand-pill--off { background: var(--theme-elevation-100); color: var(--theme-elevation-500); }
+.brand-pill--accent { background: var(--brand-accent); color: var(--brand-on-accent); }
+
+/* 导航底部「查看前台网站」外链（ViewSiteNavLink） */
+.brand-nav-link {
+  display: block;
+  margin-top: 0.5rem;
+  padding: 0.55rem var(--gutter-h);
+  border-top: 1px solid var(--theme-border-color);
+  color: var(--brand-accent-strong);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.brand-nav-link:hover {
+  background: var(--theme-elevation-50);
+  color: var(--brand-accent);
+}

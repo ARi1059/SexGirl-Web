@@ -10,7 +10,8 @@ export const Customers: CollectionConfig = {
     // 用户名登录，关邮箱登录、不强制邮箱（契合「自设用户名+密码」）。
     loginWithUsername: { allowEmailLogin: false, requireEmail: false },
   },
-  admin: { useAsTitle: 'username', defaultColumns: ['username', 'nickname', 'createdAt'] },
+  labels: { singular: '会员', plural: '会员' },
+  admin: { useAsTitle: 'username', defaultColumns: ['username', 'nickname', 'createdAt'], group: '会员与客服' },
   // 删客户前先清其收藏（favorites.customer 为 required，FK ON DELETE SET NULL 会撞 NOT NULL）。
   hooks: { beforeDelete: [cleanupFavoritesByCustomer] },
   access: {

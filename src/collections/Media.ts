@@ -5,6 +5,8 @@ import { isAdmin } from '../access/roles'
 // 多尺寸对应设计规范 §5：thumbnail 列表 / card 卡片 / full 详情。
 export const Media: CollectionConfig = {
   slug: 'media',
+  labels: { singular: '图片', plural: '媒体库' },
+  admin: { group: '系统' },
   access: { read: () => true, create: isAdmin, update: isAdmin, delete: isAdmin },
   upload: {
     imageSizes: [

@@ -21,6 +21,13 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { CoverCell as CoverCell_c25d71931ebc28e87c7e61f444888bd1 } from '../../../components/admin/CoverCell'
+import { PublishedPill as PublishedPill_16b4fdeb73d6156ee68f62259cb0fbe2 } from '../../../components/admin/BoolPillCell'
+import { AvailableTodayPill as AvailableTodayPill_16b4fdeb73d6156ee68f62259cb0fbe2 } from '../../../components/admin/BoolPillCell'
+import { BrandIcon as BrandIcon_d0588eb7948ddcaab14f9f6ea2cd1dd7 } from '../../../components/admin/BrandIcon'
+import { BrandLogo as BrandLogo_9bb8ea9971948830b3de812baaa56aec } from '../../../components/admin/BrandLogo'
+import { ViewSiteNavLink as ViewSiteNavLink_e63cdce0a15a522e9f3426524e3d56f4 } from '../../../components/admin/ViewSiteNavLink'
+import { DashboardStats as DashboardStats_123c62f476ef106d93ca9259c1aa40c9 } from '../../../components/admin/DashboardStats'
 import { ResetAvailableTodayButton as ResetAvailableTodayButton_7944d0509669ea2c1b8ef4f6cf6e8d7e } from '../../../components/admin/ResetAvailableTodayButton'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
@@ -49,6 +56,13 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "/components/admin/CoverCell#CoverCell": CoverCell_c25d71931ebc28e87c7e61f444888bd1,
+  "/components/admin/BoolPillCell#PublishedPill": PublishedPill_16b4fdeb73d6156ee68f62259cb0fbe2,
+  "/components/admin/BoolPillCell#AvailableTodayPill": AvailableTodayPill_16b4fdeb73d6156ee68f62259cb0fbe2,
+  "/components/admin/BrandIcon#BrandIcon": BrandIcon_d0588eb7948ddcaab14f9f6ea2cd1dd7,
+  "/components/admin/BrandLogo#BrandLogo": BrandLogo_9bb8ea9971948830b3de812baaa56aec,
+  "/components/admin/ViewSiteNavLink#ViewSiteNavLink": ViewSiteNavLink_e63cdce0a15a522e9f3426524e3d56f4,
+  "/components/admin/DashboardStats#DashboardStats": DashboardStats_123c62f476ef106d93ca9259c1aa40c9,
   "/components/admin/ResetAvailableTodayButton#ResetAvailableTodayButton": ResetAvailableTodayButton_7944d0509669ea2c1b8ef4f6cf6e8d7e,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

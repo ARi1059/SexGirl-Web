@@ -9,7 +9,8 @@ import { isAdmin, isCustomer } from '../access/roles'
 // - 唯一索引 (customer, product) 防重复收藏。
 export const Favorites: CollectionConfig = {
   slug: 'favorites',
-  admin: { useAsTitle: 'id', defaultColumns: ['customer', 'product', 'createdAt'] },
+  labels: { singular: '收藏', plural: '收藏记录' },
+  admin: { useAsTitle: 'id', defaultColumns: ['customer', 'product', 'createdAt'], group: '会员与客服' },
   access: {
     // 后台仅管理员可查看（支持/排查），客户进不了 admin。
     admin: isAdmin,

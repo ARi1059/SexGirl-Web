@@ -14,7 +14,7 @@ const PER_PAGE = 10;
 
 // 商品列表 /admin/products（server，读异步 searchParams 的 q/page）。
 // 列表数据走 Local API（门内，已 requireAdmin）；行内切上架/今日接单与删除走 REST（client）。
-// 新建/编辑深链 Payload /cms（富文本、标签 blocks、封面/多图上传在那里处理）。
+// 新建/编辑走自建内联表单 /admin/products/new|[id]（富文本/标签/封面多图上传均在站内处理）。
 export default async function ProductsPage({
   searchParams,
 }: {
@@ -42,7 +42,7 @@ export default async function ProductsPage({
       <PageHeader
         title="商品管理"
         subtitle={`共 ${totalDocs} 件商品`}
-        createHref="/cms/collections/products/create"
+        createHref="/admin/products/new"
         createLabel="新建商品"
       />
 
@@ -136,6 +136,7 @@ export default async function ProductsPage({
                           id={p.id}
                           title={p.title}
                           viewHref={`/p/${p.id}`}
+                          editHref={`/admin/products/${p.id}`}
                         />
                       </td>
                     </tr>

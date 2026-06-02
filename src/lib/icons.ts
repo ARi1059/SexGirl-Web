@@ -30,6 +30,9 @@ const ICONS: Record<string, LucideIcon> = {
   Tag,
 };
 
+/** 标签编辑器图标下拉用的白名单名列表（与 ICONS 单一来源同步）。 */
+export const ICON_NAMES = Object.keys(ICONS);
+
 /**
  * 模块级图标组件：按名查表后用 createElement 渲染。
  * 在此封装而非在 render 里把查表结果当 JSX 标签用，避免 React Compiler

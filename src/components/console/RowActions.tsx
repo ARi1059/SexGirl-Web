@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, SquarePen, Trash2 } from "lucide-react";
 
 // 列表行操作（client，集合通用）。
 // - 查看：前台链接（可选，新开标签）
-// - 编辑：深链 Payload 原生编辑器 /cms/collections/<collection>/<id>（处理富文本/标签/上传等复杂字段）
+// - 编辑：传 editHref → 站内软导航到自建编辑页（如 /admin/products/<id>）；否则深链 Payload /cms 编辑器
 // - 删除：二次确认 → DELETE /api/<collection>/<id>（cookie 鉴权，服务端 isAdmin 强制；
 //   级联清理由各集合的 beforeDelete 钩子负责）→ router.refresh()
 export function RowActions({
@@ -14,11 +15,13 @@ export function RowActions({
   id,
   title,
   viewHref,
+  editHref,
 }: {
   collection: string;
   id: number | string;
   title: string;
   viewHref?: string;
+  editHref?: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -61,9 +64,15 @@ export function RowActions({
           <Eye size={13} />
         </a>
       ) : null}
-      <a href={`/cms/collections/${collection}/${id}`} className={btn} title="编辑（Payload 编辑器）">
-        <SquarePen size={13} />
-      </a>
+      {editHref ? (
+        <Link href={editHref} className={btn} title="编辑">
+          <SquarePen size={13} />
+        </Link>
+      ) : (
+        <a href={`/cms/collections/${collection}/${id}`} className={btn} title="编辑（Payload 编辑器）">
+          <SquarePen size={13} />
+        </a>
+      )}
       <button
         type="button"
         onClick={del}

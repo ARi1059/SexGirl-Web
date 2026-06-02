@@ -4,6 +4,7 @@ import Link from "next/link";
 import "../globals.css";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { FavoritesProvider } from "@/components/favorite/FavoritesProvider";
+import { FavoritesNavLink } from "@/components/favorite/FavoritesNavLink";
 import { AccountNav } from "@/components/account/AccountNav";
 
 // 前台路由组的根布局（root layout）：持有 <html>/<body>。
@@ -48,16 +49,34 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
               >
                 定制商品
               </Link>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-4">
+                <FavoritesNavLink />
                 <AccountNav />
+                <Link
+                  href="/admin"
+                  className="border border-line px-3 py-1.5 text-overline uppercase text-ink-muted transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]"
+                >
+                  后台
+                </Link>
                 <ThemeToggle />
               </div>
             </header>
 
             <main className="flex-1">{children}</main>
 
-            <footer className="border-t border-line px-[clamp(20px,5vw,96px)] py-8 text-small text-ink-muted">
-              定制商品展示 · 看中款式，微信 / QQ 私聊定制
+            <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-[clamp(20px,5vw,96px)] py-8 text-small text-ink-muted">
+              <span>定制商品展示 · 看中款式，微信 / QQ 私聊定制</span>
+              <nav aria-label="页脚导航" className="flex gap-5 text-overline uppercase">
+                <Link href="/" className="transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]">
+                  画廊
+                </Link>
+                <Link href="/login" className="transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]">
+                  登录
+                </Link>
+                <Link href="/admin" className="transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]">
+                  管理后台
+                </Link>
+              </nav>
             </footer>
           </div>
         </FavoritesProvider>

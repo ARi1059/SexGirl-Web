@@ -46,3 +46,7 @@ next-env.d.ts
 
 # turbo / swc cache
 .turbo
+
+# 设计参考稿（Figma 导出的独立 Vite 项目，仅备查，不并入仓库构建）
+/UI Style Redesign/
+/UI Style Redesign (1)/

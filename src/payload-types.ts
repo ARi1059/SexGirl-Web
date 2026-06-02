@@ -181,6 +181,10 @@ export interface Product {
   availableTodayText?: string | null;
   statusText?: string | null;
   /**
+   * 展示用价格文案，如「¥128」。留空则详情页不显示。
+   */
+  price?: string | null;
+  /**
    * 前台分类页 /c/<slug> 据此筛选；可在「分类」集合维护类型。
    */
   category?: (number | null) | Category;
@@ -497,6 +501,7 @@ export interface ProductsSelect<T extends boolean = true> {
   availableToday?: T;
   availableTodayText?: T;
   statusText?: T;
+  price?: T;
   category?: T;
   sortOrder?: T;
   tags?:

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AuthForm } from "@/components/account/AuthForm";
+import { MemberBenefits } from "@/components/account/MemberBenefits";
 
 export const metadata: Metadata = { title: "注册 · 定制商品展示" };
 
@@ -15,9 +16,13 @@ export default function RegisterPage() {
           自设用户名与密码即可收藏心仪商品。浏览全程免登录，仅收藏与个人中心需要账号。
         </p>
       </header>
-      <Suspense fallback={null}>
-        <AuthForm mode="register" />
-      </Suspense>
+      {/* 双列：左表单（max 420）/ 右会员专属面板；移动端堆叠。两列各自 mt-8 顶部对齐。 */}
+      <div className="grid gap-[clamp(32px,5vw,80px)] md:grid-cols-[minmax(0,420px)_1fr] md:items-start">
+        <Suspense fallback={null}>
+          <AuthForm mode="register" />
+        </Suspense>
+        <MemberBenefits className="mt-8" />
+      </div>
     </div>
   );
 }

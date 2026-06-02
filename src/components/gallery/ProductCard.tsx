@@ -1,5 +1,6 @@
 import { ViewTransition } from "react";
 import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 import type { Product } from "@/payload-types";
 import { resolveImage } from "@/lib/media";
 import { TagRenderer } from "@/components/renderers/TagRenderer";
@@ -33,6 +34,21 @@ export function ProductCard({ product, feature = false }: { product: Product; fe
               className="object-cover transition-transform duration-[640ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
             />
           ) : null}
+
+          {/* hover 浮层：scrim + 居中「查看详情」胶囊。group 在外层 <Link> 上（Gallery.tsx）；
+              pointer-events-none 不拦截卡片链接 / 收藏按钮点击。reduced-motion 由全局过渡置零自然降级。 */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[var(--dur)] ease-[var(--ease-out)] group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
+          >
+            <div className="absolute inset-0" style={{ background: "var(--scrim)" }} />
+            <div className="absolute inset-0 grid place-items-center">
+              <span className="inline-flex items-center gap-1.5 bg-paper/90 px-4 py-2.5 text-small font-medium text-ink backdrop-blur">
+                查看详情
+                <ArrowRight size={14} strokeWidth={1.5} />
+              </span>
+            </div>
+          </div>
         </div>
       </ViewTransition>
 

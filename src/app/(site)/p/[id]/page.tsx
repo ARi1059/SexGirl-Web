@@ -7,6 +7,7 @@ import { Carousel } from "@/components/gallery/Carousel";
 import { StatusBadge } from "@/components/gallery/StatusBadge";
 import { TagRenderer } from "@/components/renderers/TagRenderer";
 import { ContactSection } from "@/components/contact/ContactSection";
+import { ContactRenderer } from "@/components/renderers/ContactRenderer";
 import { FavoriteButton } from "@/components/favorite/FavoriteButton";
 
 // 商品详情页 /p/[id]（开发计划 M3-5）。ISR + 构建期预渲染已上架商品。
@@ -89,13 +90,26 @@ export default async function ProductDetailPage({
             />
           </div>
 
+          {/* 价格：有值才显示（设计决策：保留私聊定制定位，不强制定价）。 */}
+          {product.price ? (
+            <p className="mt-3 font-display text-h3 font-medium text-ink">{product.price}</p>
+          ) : null}
+
           <TagRenderer tags={product.tags} className="mt-5" />
 
           {product.description ? (
             <RichText data={product.description} className="richtext mt-8 max-w-[68ch]" />
           ) : null}
 
-          <ContactSection contacts={product.contacts} label={product.title} className="mt-10" />
+          {/* 联系区：保留无障碍弹层 CTA（按钮）+ 下方内联常驻联系方式（二者并存，设计决策）。 */}
+          <section className="mt-10 border-t-[1.5px] border-line-strong pt-6">
+            <p className="mb-4 text-overline uppercase text-ink-muted">联系方式</p>
+            <ContactSection contacts={product.contacts} label={product.title} />
+            <ContactRenderer contacts={product.contacts} className="mt-5" />
+            <p className="mt-5 text-small leading-relaxed text-ink-subtle">
+              看中款式，添加微信或 QQ，发送商品名称「{product.title}」即可开始定制
+            </p>
+          </section>
         </div>
       </div>
     </div>

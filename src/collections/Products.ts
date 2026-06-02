@@ -12,7 +12,7 @@ export const Products: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     // 列表首列加封面缩略图（CoverCell），一眼可辨。
-    defaultColumns: ['coverImage', 'title', 'published', 'availableToday', 'category', 'sortOrder'],
+    defaultColumns: ['coverImage', 'title', 'price', 'published', 'availableToday', 'category', 'sortOrder'],
     group: '内容管理',
     // 编辑页「预览」按钮 → 前台商品详情 /p/<id>（相对路径，跨域名/环境都正确）。
     preview: (doc) => (doc?.id ? `/p/${String(doc.id)}` : null),
@@ -66,6 +66,12 @@ export const Products: CollectionConfig = {
       },
     },
     { name: 'statusText', type: 'text', label: '自定义状态文字（如：已约满）' },
+    {
+      name: 'price',
+      type: 'text',
+      label: '价格',
+      admin: { description: '展示用价格文案，如「¥128」。留空则详情页不显示。' },
+    },
     {
       name: 'category',
       type: 'relationship',

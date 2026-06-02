@@ -16,6 +16,7 @@ type Me = { id: number; username: string; nickname?: string | null };
 type FavoritesContextValue = {
   me: Me | null;
   ready: boolean;
+  count: number;
   isFavorited: (productId: number) => boolean;
   toggle: (productId: number) => void;
   logout: () => Promise<void>;
@@ -146,9 +147,12 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     router.refresh();
   }, [router]);
 
+  // 收藏数量（派生自 favs；乐观新增的临时 id -1 仍是有效键，计数即时正确）。
+  const count = Object.keys(favs).length;
+
   const value = useMemo<FavoritesContextValue>(
-    () => ({ me, ready, isFavorited, toggle, logout }),
-    [me, ready, isFavorited, toggle, logout],
+    () => ({ me, ready, count, isFavorited, toggle, logout }),
+    [me, ready, count, isFavorited, toggle, logout],
   );
 
   return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>;

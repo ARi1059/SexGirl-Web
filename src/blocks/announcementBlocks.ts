@@ -80,6 +80,31 @@ export const CalloutBlock: Block = {
   ],
 }
 
+// 下载按钮 —— 引用「安装包」集合（collections/Downloads）里上传的文件，前台渲染成原生下载按钮。
+// 专给「App 下载教学」用，但两 Global 共用调色板故对两页都可用。file 关系在 depth:2 已展开
+// （body → download 块 → file 恰好两层，与 image 同），前台 DownloadBtn 据 platform 选图标。
+export const DownloadBlock: Block = {
+  slug: 'download',
+  labels: { singular: '下载按钮', plural: '下载按钮' },
+  fields: [
+    { name: 'file', type: 'upload', relationTo: 'downloads', required: true, label: '安装包文件' },
+    { name: 'label', type: 'text', required: true, label: '按钮文字（如：下载安卓版）' },
+    {
+      name: 'platform',
+      type: 'select',
+      defaultValue: 'other',
+      label: '平台（决定图标）',
+      options: [
+        { label: '安卓 Android', value: 'android' },
+        { label: '苹果 iOS', value: 'ios' },
+        { label: '其他', value: 'other' },
+      ],
+    },
+    { name: 'version', type: 'text', label: '版本号（可选，如 v2.3.1）' },
+    { name: 'note', type: 'text', label: '说明（可选，如 支持安卓 7.0+）' },
+  ],
+}
+
 // 两个公告 Global 共用的调色板。增减积木只改这里一处。
 export const announcementBlocks: Block[] = [
   RichTextBlock,
@@ -88,4 +113,5 @@ export const announcementBlocks: Block[] = [
   StepBlock,
   QrCodeBlock,
   CalloutBlock,
+  DownloadBlock,
 ]

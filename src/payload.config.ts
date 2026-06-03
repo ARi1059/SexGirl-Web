@@ -14,6 +14,7 @@ import { Products } from './collections/Products'
 import { Categories } from './collections/Categories'
 import { Customers } from './collections/Customers'
 import { Favorites } from './collections/Favorites'
+import { Downloads } from './collections/Downloads'
 import { resetAvailableToday } from './endpoints/resetAvailableToday'
 import { SiteSettings } from './globals/SiteSettings'
 import { AppDownloadGuide, FindUsGuide } from './globals/announcements'
@@ -72,7 +73,7 @@ export default buildConfig({
       afterNavLinks: ['/components/admin/ViewSiteNavLink#ViewSiteNavLink'],
     },
   },
-  collections: [Products, Categories, Contacts, Media, Customers, Favorites, Users],
+  collections: [Products, Categories, Contacts, Media, Customers, Favorites, Users, Downloads],
   globals: [SiteSettings, AppDownloadGuide, FindUsGuide],
   // 自定义 REST 端点：POST /api/reset-available-today（默认挂在 routes.api='/api' 下）。
   endpoints: [resetAvailableToday],
@@ -94,7 +95,8 @@ export default buildConfig({
   plugins: hasS3
     ? [
         s3Storage({
-          collections: { media: true },
+          // downloads = 安装包集合（二进制大文件），同享 clientUploads 直传，绕过请求体上限。
+          collections: { media: true, downloads: true },
           bucket: process.env.S3_BUCKET as string,
           // 后台直传对象存储，绕过 Vercel ~4.5MB 请求体上限（否则大图上传会失败）。
           // 默认仅登录用户可拿上传凭据；需在 Supabase bucket 配 CORS 允许本站 origin 的 PUT。

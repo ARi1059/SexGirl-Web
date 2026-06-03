@@ -1,17 +1,18 @@
 import type { ReactNode } from "react";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import type { AnnouncementBlock } from "@/lib/announcements";
-import { AnnounceImage, Btn, Callout, Step } from "./kit";
+import { AnnounceImage, Btn, Callout, DownloadBtn, Step } from "./kit";
 import { QrCard } from "./QrCard";
 
 // 公告正文分发器（server）：读 Global 的 body 积木数组，按 blockType 渲染对应基元。
-// 连续同类积木会成组：button → CTA 横排、qrcode → 响应式网格、step → 编号列表
+// 连续同类积木会成组：button / download → 横排、qrcode → 响应式网格、step → 编号列表
 //（步骤序号 01/02… 跨组连续计数，只数 step）。未知 blockType 走 null 降级（前向兼容）。
 // 顶层各组之间用 space-y-12 撑出节奏；step 组内各步骤自带发丝线 + 内边距，不再叠间距。
 
 type ButtonB = Extract<AnnouncementBlock, { blockType: "button" }>;
 type QrB = Extract<AnnouncementBlock, { blockType: "qrcode" }>;
 type StepB = Extract<AnnouncementBlock, { blockType: "step" }>;
+type DownloadB = Extract<AnnouncementBlock, { blockType: "download" }>;
 
 export function AnnouncementBody({ body }: { body?: AnnouncementBlock[] | null }) {
   if (!body?.length) return null;
@@ -35,6 +36,30 @@ export function AnnouncementBody({ body }: { body?: AnnouncementBlock[] | null }
         <div key={key} className="flex flex-col gap-3 min-[580px]:flex-row min-[580px]:flex-wrap">
           {run.map((b, j) => (
             <Btn key={b.id ?? j} label={b.label} url={b.url} style={b.style} icon={b.icon} size="lg" />
+          ))}
+        </div>,
+      );
+      continue;
+    }
+
+    // 连续 download → 下载按钮横排（移动端竖排，≥580 横向换行）
+    if (block.blockType === "download") {
+      const run: DownloadB[] = [];
+      while (i < body.length && body[i].blockType === "download") {
+        run.push(body[i] as DownloadB);
+        i++;
+      }
+      groups.push(
+        <div key={key} className="flex flex-col gap-3 min-[580px]:flex-row min-[580px]:flex-wrap">
+          {run.map((b, j) => (
+            <DownloadBtn
+              key={b.id ?? j}
+              file={b.file}
+              label={b.label}
+              platform={b.platform}
+              version={b.version}
+              note={b.note}
+            />
           ))}
         </div>,
       );

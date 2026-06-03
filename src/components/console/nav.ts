@@ -1,6 +1,7 @@
 // 后台导航的单一数据源（Sidebar 高亮 + Header 面包屑共用，避免两处重复）。
 // group：侧栏按分组渲染小标题（与设计稿 AdminSidebar 的 NAV_GROUPS 一致）。
-export type NavItem = { href: string; label: string; group: string };
+// superadminOnly：仅超管可见的项（Sidebar 据登录角色过滤），与页面段级 requireSuperAdmin 双重把关。
+export type NavItem = { href: string; label: string; group: string; superadminOnly?: boolean };
 
 export const NAV: NavItem[] = [
   { href: "/admin", label: "仪表盘", group: "内容管理" },
@@ -11,6 +12,7 @@ export const NAV: NavItem[] = [
   { href: "/admin/customers", label: "客户管理", group: "会员与客服" },
   { href: "/admin/favorites", label: "用户收藏", group: "会员与客服" },
   { href: "/admin/users", label: "管理员", group: "会员与客服" },
+  { href: "/admin/announcements", label: "公告栏", group: "网站配置", superadminOnly: true },
   { href: "/admin/settings", label: "网站全局设置", group: "网站配置" },
 ];
 

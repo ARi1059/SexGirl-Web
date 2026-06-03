@@ -75,6 +75,7 @@ export interface Config {
     customers: Customer;
     favorites: Favorite;
     users: User;
+    downloads: Download;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -89,6 +90,7 @@ export interface Config {
     customers: CustomersSelect<false> | CustomersSelect<true>;
     favorites: FavoritesSelect<false> | FavoritesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    downloads: DownloadsSelect<false> | DownloadsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -389,6 +391,25 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "downloads".
+ */
+export interface Download {
+  id: number;
+  label?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -438,6 +459,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: number | User;
+      } | null)
+    | ({
+        relationTo: 'downloads';
+        value: number | Download;
       } | null);
   globalSlug?: string | null;
   user:
@@ -687,6 +712,24 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "downloads_select".
+ */
+export interface DownloadsSelect<T extends boolean = true> {
+  label?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -875,6 +918,16 @@ export interface AppDownloadGuide {
             blockName?: string | null;
             blockType: 'callout';
           }
+        | {
+            file: number | Download;
+            label: string;
+            platform?: ('android' | 'ios' | 'other') | null;
+            version?: string | null;
+            note?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'download';
+          }
       )[]
     | null;
   updatedAt?: string | null;
@@ -983,6 +1036,16 @@ export interface FindUsGuide {
             blockName?: string | null;
             blockType: 'callout';
           }
+        | {
+            file: number | Download;
+            label: string;
+            platform?: ('android' | 'ios' | 'other') | null;
+            version?: string | null;
+            note?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'download';
+          }
       )[]
     | null;
   updatedAt?: string | null;
@@ -1072,6 +1135,17 @@ export interface AppDownloadGuideSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        download?:
+          | T
+          | {
+              file?: T;
+              label?: T;
+              platform?: T;
+              version?: T;
+              note?: T;
+              id?: T;
+              blockName?: T;
+            };
       };
   updatedAt?: T;
   createdAt?: T;
@@ -1135,6 +1209,17 @@ export interface FindUsGuideSelect<T extends boolean = true> {
           | {
               tone?: T;
               content?: T;
+              id?: T;
+              blockName?: T;
+            };
+        download?:
+          | T
+          | {
+              file?: T;
+              label?: T;
+              platform?: T;
+              version?: T;
+              note?: T;
               id?: T;
               blockName?: T;
             };

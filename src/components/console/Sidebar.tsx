@@ -13,6 +13,7 @@ import {
   Settings,
   Sliders,
   Megaphone,
+  Palette,
   ExternalLink,
   ChevronRight,
   type LucideIcon,
@@ -29,6 +30,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/admin/favorites": Heart,
   "/admin/users": Settings,
   "/admin/announcements": Megaphone,
+  "/admin/appearance": Palette,
   "/admin/settings": Sliders,
 };
 

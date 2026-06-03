@@ -13,6 +13,7 @@ export const NAV: NavItem[] = [
   { href: "/admin/favorites", label: "用户收藏", group: "会员与客服" },
   { href: "/admin/users", label: "管理员", group: "会员与客服" },
   { href: "/admin/announcements", label: "公告栏", group: "网站配置", superadminOnly: true },
+  { href: "/admin/appearance", label: "外观主题", group: "网站配置", superadminOnly: true },
   { href: "/admin/settings", label: "网站全局设置", group: "网站配置" },
 ];
 

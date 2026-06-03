@@ -78,3 +78,22 @@ export async function getSiteSettings(): Promise<SiteSettingsResolved> {
 export function titleWithSuffix(page: string, s: SiteSettingsResolved): string {
   return `${page} · ${s.metaTitle}`;
 }
+
+// ── 外观主题（Global「appearance」，超管切换；前台 (site)/layout 据此在 <html> 落 data-skin）──
+// 换肤靠 globals.css 的 [data-skin='ios'] 作用域重定义语义令牌，零组件改动（同 .dark 暗色做法）。
+export type SiteTheme = "default" | "ios";
+
+const SITE_THEMES: readonly SiteTheme[] = ["default", "ios"];
+const isSiteTheme = (v: unknown): v is SiteTheme =>
+  typeof v === "string" && (SITE_THEMES as readonly string[]).includes(v);
+
+/** 读外观主题，非法 / 未初始化回退 'default'。仅 Server Component 调用。 */
+export async function getAppearance(): Promise<{ theme: SiteTheme }> {
+  try {
+    const payload = await getPayloadClient();
+    const a = await payload.findGlobal({ slug: "appearance", depth: 0 });
+    return { theme: isSiteTheme(a?.theme) ? a.theme : "default" };
+  } catch {
+    return { theme: "default" }; // global 未初始化 / 非请求上下文 → 回退默认主题
+  }
+}

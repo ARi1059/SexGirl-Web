@@ -17,6 +17,7 @@ import { Favorites } from './collections/Favorites'
 import { Downloads } from './collections/Downloads'
 import { resetAvailableToday } from './endpoints/resetAvailableToday'
 import { SiteSettings } from './globals/SiteSettings'
+import { Appearance } from './globals/appearance'
 import { AppDownloadGuide, FindUsGuide } from './globals/announcements'
 
 const filename = fileURLToPath(import.meta.url)
@@ -74,7 +75,7 @@ export default buildConfig({
     },
   },
   collections: [Products, Categories, Contacts, Media, Customers, Favorites, Users, Downloads],
-  globals: [SiteSettings, AppDownloadGuide, FindUsGuide],
+  globals: [SiteSettings, Appearance, AppDownloadGuide, FindUsGuide],
   // 自定义 REST 端点：POST /api/reset-available-today（默认挂在 routes.api='/api' 下）。
   endpoints: [resetAvailableToday],
   editor: lexicalEditor(),

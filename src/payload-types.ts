@@ -98,8 +98,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -716,6 +720,76 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  /**
+   * 导航栏 Logo 与浏览器标题
+   */
+  siteName?: string | null;
+  siteSlogan?: string | null;
+  /**
+   * 浏览器标签 / SEO 标题；前台各页以「· 此值」为后缀
+   */
+  metaTitle?: string | null;
+  metaDesc?: string | null;
+  galleryTitle?: string | null;
+  /**
+   * 如：款 / 件 / 套
+   */
+  galleryUnit?: string | null;
+  /**
+   * 跟在数量后，如「9 款 · 私域专属」
+   */
+  galleryTagSuffix?: string | null;
+  /**
+   * 商品详情联系区底部；可用 {title} 插入当前商品名
+   */
+  contactHint?: string | null;
+  /**
+   * 站点级记录；前台联系展示仍以各商品绑定的客服为准（暂不展示此字段）
+   */
+  wechatId?: string | null;
+  /**
+   * 同上，站点级记录用途
+   */
+  qqId?: string | null;
+  loginHint?: string | null;
+  registerHint?: string | null;
+  footerText?: string | null;
+  /**
+   * 仅记录用途：Payload /cms 标签后缀为构建期静态值，暂不由此字段动态驱动
+   */
+  adminTitle?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  siteName?: T;
+  siteSlogan?: T;
+  metaTitle?: T;
+  metaDesc?: T;
+  galleryTitle?: T;
+  galleryUnit?: T;
+  galleryTagSuffix?: T;
+  contactHint?: T;
+  wechatId?: T;
+  qqId?: T;
+  loginHint?: T;
+  registerHint?: T;
+  footerText?: T;
+  adminTitle?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

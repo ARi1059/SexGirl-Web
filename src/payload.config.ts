@@ -15,6 +15,7 @@ import { Categories } from './collections/Categories'
 import { Customers } from './collections/Customers'
 import { Favorites } from './collections/Favorites'
 import { resetAvailableToday } from './endpoints/resetAvailableToday'
+import { SiteSettings } from './globals/SiteSettings'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -71,6 +72,7 @@ export default buildConfig({
     },
   },
   collections: [Products, Categories, Contacts, Media, Customers, Favorites, Users],
+  globals: [SiteSettings],
   // 自定义 REST 端点：POST /api/reset-available-today（默认挂在 routes.api='/api' 下）。
   endpoints: [resetAvailableToday],
   editor: lexicalEditor(),

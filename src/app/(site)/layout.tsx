@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { FavoritesProvider } from "@/components/favorite/FavoritesProvider";
 import { FavoritesNavLink } from "@/components/favorite/FavoritesNavLink";
 import { AccountNav } from "@/components/account/AccountNav";
+import { getSiteSettings } from "@/lib/site";
 
 // 前台路由组的根布局（root layout）：持有 <html>/<body>。
 // Payload 后台 (payload) 组经 @payloadcms/next 的 RootLayout 自带 <html>/<body>，
@@ -17,10 +18,10 @@ import { AccountNav } from "@/components/account/AccountNav";
 // 或自托管字体时，用 next/font 设置这些变量即可自动启用 Fraunces / Inter / Geist Mono，
 // 当前回退到系统字体（详见 docs/前端设计规范.md §2.2 / §10）。
 
-export const metadata: Metadata = {
-  title: "定制商品展示",
-  description: "精选定制商品画廊 —— 看中款式，微信 / QQ 私聊定制。",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getSiteSettings();
+  return { title: s.metaTitle, description: s.metaDesc };
+}
 
 // 防暗色主题首帧闪烁（FOUC）：首帧前按 localStorage / 系统偏好定主题。详见设计规范 §3
 const themeInit = `(function(){try{var t=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||(!t&&d))document.documentElement.classList.add('dark');}catch(e){}})();`;
@@ -29,7 +30,8 @@ const themeInit = `(function(){try{var t=localStorage.getItem('theme');var d=win
 // 页面各自负责内容区的 max-width 与左右边距（§4），故 <main> 不加内边距。
 // FavoritesProvider（client）包裹全站，提供会员态/收藏态；登录态只在客户端读，
 // 本 layout 保持 server 组件且静态，ISR 不被污染（开发文档 §7.4）。
-export default function SiteLayout({ children }: { children: ReactNode }) {
+export default async function SiteLayout({ children }: { children: ReactNode }) {
+  const s = await getSiteSettings();
   return (
     <html lang="zh-CN" className="h-full antialiased" suppressHydrationWarning>
       <head>
@@ -47,7 +49,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
                 href="/"
                 className="font-display text-xl font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]"
               >
-                定制商品
+                {s.siteName}
               </Link>
               <div className="flex items-center gap-4">
                 <FavoritesNavLink />
@@ -65,7 +67,7 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             <main className="flex-1">{children}</main>
 
             <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-[clamp(20px,5vw,96px)] py-8 text-small text-ink-muted">
-              <span>定制商品展示 · 看中款式，微信 / QQ 私聊定制</span>
+              <span>{s.footerText}</span>
               <nav aria-label="页脚导航" className="flex gap-5 text-overline uppercase">
                 <Link href="/" className="transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]">
                   画廊

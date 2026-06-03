@@ -5,7 +5,7 @@ import path from 'node:path'
 import sharp from 'sharp'
 
 import { getPayloadClient } from '@/lib/payload'
-import type { Product } from '@/payload-types'
+import type { AppDownloadGuide, FindUsGuide, Product } from '@/payload-types'
 
 // 开发种子数据（开发计划 M1-5 超管 + M1-6 示例数据）。
 // 运行： pnpm seed  （= payload run src/seed.ts）
@@ -39,6 +39,70 @@ const richText = (paragraphs: string[]): Lexical => ({
     })),
   },
 })
+
+// ── 公告栏预填内容（Figma 文案）──────────────────────────────────────────────
+// 仅预填「文本类」积木：step（不含图）/ button / callout / richText —— image 与
+// qrcode 的 image 字段必填，无法 seed 空值，故留给超管在 /cms 上传真实截图 / 二维码。
+// 按钮链接用 '#' 占位，超管在后台替换为真实地址。
+type AnnBody = NonNullable<AppDownloadGuide['body']>
+// step.body / callout.content / richText.content 同为该 Lexical 形状（与上面 richText() 输出结构一致）。
+type AnnRichText = Extract<AnnBody[number], { blockType: 'richText' }>['content']
+const rt = (paragraphs: string[]): AnnRichText => richText(paragraphs) as AnnRichText
+
+const APP_INTRO = '四个步骤完成安装，全程无需翻墙，支持 iOS 与 Android。\n请确保手机存储空间充足，网络连接稳定。'
+
+const APP_BODY: AnnBody = [
+  {
+    blockType: 'step',
+    title: '打开官方应用商店',
+    body: rt(['在手机主屏找到 App Store（苹果）或 Google Play（安卓），点击底部搜索栏进入搜索页面。']),
+  },
+  {
+    blockType: 'step',
+    title: '搜索并找到官方应用',
+    body: rt(['在搜索框输入「CDS 定制」。官方图标为粉色背景白星，开发者认证 · 评分 4.9。请勿下载同名山寨应用。']),
+  },
+  {
+    blockType: 'step',
+    title: '点击获取，等待安装',
+    body: rt(['点击「获取」或「安装」后等待进度条完成。首次安装苹果设备需输入 Apple ID 密码或使用面部 / 指纹解锁确认，通常 1–3 分钟完成。']),
+  },
+  {
+    blockType: 'step',
+    title: '注册账号，开始浏览',
+    body: rt(['打开应用，输入手机号并接收短信验证码完成注册。已有账号可直接登录；浏览全程免登录，仅收藏与个人中心功能需要账号。']),
+  },
+  { blockType: 'richText', content: rt(['选择你的平台，立即下载：']) },
+  { blockType: 'button', label: 'iOS · App Store', url: '#', style: 'primary', icon: 'Apple' },
+  { blockType: 'button', label: 'Android · Google Play', url: '#', style: 'secondary', icon: 'Smartphone' },
+  { blockType: 'button', label: 'APK 直接下载', url: '#', style: 'outline', icon: 'Download' },
+  {
+    blockType: 'callout',
+    tone: 'warning',
+    content: rt([
+      '若应用商店暂时找不到本应用（可能因审核下架），请扫码直接下载 APK 安装包，或添加官方微信客服获取最新可用地址。安装 APK 前，请在系统设置中开启「允许安装未知来源应用」。',
+    ]),
+  },
+]
+
+const FIND_INTRO =
+  '网络环境随时变化，当前地址可能无法访问。请将本页收藏，并保存以下所有联系方式——只要有一条能联系上，就能第一时间获取最新地址。'
+
+const FIND_BODY: NonNullable<FindUsGuide['body']> = [
+  { blockType: 'richText', content: rt(['主站无法访问时，下列任意一个渠道均可联系我们并获取新地址。请至少保存两种方式。']) },
+  { blockType: 'button', label: '微信公众号 · cdsexgirl_official', url: '#', style: 'primary', icon: 'MessageCircle' },
+  { blockType: 'button', label: 'Telegram 频道 · @cdsexgirl_ch', url: '#', style: 'secondary', icon: 'Send' },
+  { blockType: 'button', label: '官方微博 · @cds定制', url: '#', style: 'secondary', icon: 'Link' },
+  { blockType: 'button', label: '备用网址 · cdsexgirl.vip', url: 'https://cdsexgirl.vip', style: 'outline', icon: 'Link' },
+  { blockType: 'button', label: '备用网址 2 · cdsexgirl.xyz', url: 'https://cdsexgirl.xyz', style: 'outline', icon: 'Link' },
+  {
+    blockType: 'callout',
+    tone: 'warning',
+    content: rt([
+      '请立即截图保存本页面，并将上述微信号、Telegram 频道截图备份至相册。一旦当前网址无法访问，通过任意一条备用渠道联系我们，我们会第一时间推送最新地址。地址变更时，公众号与 Telegram 频道同步通知，请务必提前关注。',
+    ]),
+  },
+]
 
 // 渐变封面 / 详情占位图（1600×2000，竖版画廊比例）
 const gradientJpeg = (title: string, subtitle: string, hue: number): Promise<Buffer> => {
@@ -268,8 +332,30 @@ const seed = async (): Promise<void> => {
     payload.logger.info(`🛍️  商品：${s.title}${s.published ? '' : '（草稿）'}`)
   }
 
+  // ── 公告栏预填（非覆盖式幂等：已有 body 则跳过，保护超管已录内容）────────────
+  const appCur = await payload.findGlobal({ slug: 'app-download-guide', depth: 0 })
+  if (appCur?.body?.length) {
+    payload.logger.info('📣 公告「App 下载教学」已有内容，跳过预填')
+  } else {
+    await payload.updateGlobal({
+      slug: 'app-download-guide',
+      data: { title: 'App 下载教学', intro: APP_INTRO, body: APP_BODY },
+    })
+    payload.logger.info('📣 已预填公告：App 下载教学')
+  }
+  const findCur = await payload.findGlobal({ slug: 'find-us-guide', depth: 0 })
+  if (findCur?.body?.length) {
+    payload.logger.info('📣 公告「如何永久找到我们」已有内容，跳过预填')
+  } else {
+    await payload.updateGlobal({
+      slug: 'find-us-guide',
+      data: { title: '如何永久找到我们', intro: FIND_INTRO, body: FIND_BODY },
+    })
+    payload.logger.info('📣 已预填公告：如何永久找到我们')
+  }
+
   await rm(TMP, { recursive: true, force: true })
-  payload.logger.info('🎉 Seed 完成：6 商品 / 4 类型 / 4 客服 / 20 媒体')
+  payload.logger.info('🎉 Seed 完成：6 商品 / 4 类型 / 4 客服 / 20 媒体 / 2 公告')
 }
 
 try {

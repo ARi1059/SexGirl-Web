@@ -52,6 +52,19 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
                 {s.siteName}
               </Link>
               <div className="flex items-center gap-4">
+                {/* 公告页入口：桌面/平板显示（md+），移动端靠页脚避免刊头拥挤 */}
+                <Link
+                  href="/app-download"
+                  className="hidden text-overline uppercase text-ink-muted transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)] md:inline"
+                >
+                  App 下载
+                </Link>
+                <Link
+                  href="/find-us"
+                  className="hidden text-overline uppercase text-ink-muted transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)] md:inline"
+                >
+                  找到我们
+                </Link>
                 <FavoritesNavLink />
                 <AccountNav />
                 <Link
@@ -71,6 +84,12 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
               <nav aria-label="页脚导航" className="flex gap-5 text-overline uppercase">
                 <Link href="/" className="transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]">
                   画廊
+                </Link>
+                <Link href="/app-download" className="transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]">
+                  App 下载
+                </Link>
+                <Link href="/find-us" className="transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]">
+                  找到我们
                 </Link>
                 <Link href="/login" className="transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]">
                   登录

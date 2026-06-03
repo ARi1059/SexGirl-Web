@@ -62,6 +62,66 @@
   --shadow-overlay: 0 24px 60px -20px rgba(0,0,0,.6);
 }
 
+/* ──────────────────────────────────────────────────────────
+   iOS 主题皮肤 —— 超管在 /admin/appearance 切换，仅作用前台 (site)。
+   机制：重定义上面那批语义令牌为 iOS（Apple HIG）调色板 → 全站组件
+   （只用 --paper/--ink/--accent…）自动换肤，零组件改动，同 .dark 暗色做法。
+   作用域：(site)/layout 在 <html> 落 data-skin="ios"。
+   顺序关键：本块须在 :root/.dark 之后 —— [data-skin='ios'] 与 :root/.dark 同特异性 (0,1,0)，
+   靠源码靠后取胜；[data-skin='ios'].dark (0,2,0) 特异性更高，胜过 .dark。
+   取值仅来自参考稿 theme-ios.css 的调色板（不导入该文件，它是独立 Vite 项目的 Tailwind 映射）。
+   ────────────────────────────────────────────────────────── */
+[data-skin='ios'] {
+  --paper:        #FFFFFF;
+  --surface:      #F2F2F7;
+  --panel:        #E5E5EA;
+  --ink:          #000000;
+  --ink-muted:    rgba(60, 60, 67, 0.6);
+  --ink-subtle:   rgba(60, 60, 67, 0.3);
+  --line:         #D1D1D6;
+  --line-strong:  #000000;
+
+  --accent:        #007AFF;
+  --accent-strong: #0051D5;
+  --accent-soft:   #E5F0FF;
+  --on-accent:     #FFFFFF;
+  --nude:          #E5E5EA;
+
+  --focus: var(--accent);
+
+  --scrim:          linear-gradient(to top, rgba(0,0,0,.5), rgba(0,0,0,0) 60%);
+  --shadow-overlay: 0 12px 32px -12px rgba(0,0,0,.18);
+
+  /* iOS 系统字体。-web 变量驱动 .font-sans/.font-display 工具类（其 @theme inline 定义内联
+     了 var(--font-*-web, …)）；--font-* 直接量覆盖 body / .richtext 等直接 var() 消费者。两者都覆盖才彻底。 */
+  --font-sans-web:    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial;
+  --font-display-web: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial;
+  --font-sans:    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+[data-skin='ios'].dark {
+  --paper:        #000000;
+  --surface:      #1C1C1E;
+  --panel:        #2C2C2E;
+  --ink:          #FFFFFF;
+  --ink-muted:    rgba(235, 235, 245, 0.6);
+  --ink-subtle:   rgba(235, 235, 245, 0.3);
+  --line:         #38383A;
+  --line-strong:  #FFFFFF;
+
+  --accent:        #0A84FF;
+  --accent-strong: #409CFF;
+  --accent-soft:   #0A2540;
+  --on-accent:     #FFFFFF;
+  --nude:          #2C2C2E;
+
+  --focus: var(--accent);
+
+  --scrim:          linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,0) 60%);
+  --shadow-overlay: 0 16px 40px -16px rgba(0,0,0,.7);
+}
+
 /* ── Tailwind v4 主题映射（inline = 保留 var 引用，随 .dark 实时切换）── */
 @theme inline {
   --color-paper:         var(--paper);

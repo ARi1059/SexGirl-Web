@@ -102,11 +102,13 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'site-settings': SiteSetting;
+    appearance: Appearance;
     'app-download-guide': AppDownloadGuide;
     'find-us-guide': FindUsGuide;
   };
   globalsSelect: {
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    appearance: AppearanceSelect<false> | AppearanceSelect<true>;
     'app-download-guide': AppDownloadGuideSelect<false> | AppDownloadGuideSelect<true>;
     'find-us-guide': FindUsGuideSelect<false> | FindUsGuideSelect<true>;
   };
@@ -817,6 +819,19 @@ export interface SiteSetting {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appearance".
+ */
+export interface Appearance {
+  id: number;
+  /**
+   * 切换前台网站整体配色与字体；保存后全站立即生效。仅影响前台，不影响后台控制台。
+   */
+  theme: 'default' | 'ios';
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "app-download-guide".
  */
 export interface AppDownloadGuide {
@@ -1070,6 +1085,16 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   registerHint?: T;
   footerText?: T;
   adminTitle?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appearance_select".
+ */
+export interface AppearanceSelect<T extends boolean = true> {
+  theme?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

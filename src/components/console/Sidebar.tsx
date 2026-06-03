@@ -12,6 +12,7 @@ import {
   Heart,
   Settings,
   Sliders,
+  Megaphone,
   ExternalLink,
   ChevronRight,
   type LucideIcon,
@@ -27,6 +28,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/admin/customers": Users,
   "/admin/favorites": Heart,
   "/admin/users": Settings,
+  "/admin/announcements": Megaphone,
   "/admin/settings": Sliders,
 };
 
@@ -36,7 +38,7 @@ const ICONS: Record<string, LucideIcon> = {
  * 故此处用固定色值而非主题令牌，这是有意为之的「常暗」面板；其余区域（顶栏/内容/卡片）
  * 才走主题令牌随 .dark 切换。
  */
-export function Sidebar() {
+export function Sidebar({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const pathname = usePathname();
   const active = activeHref(pathname);
 
@@ -57,12 +59,18 @@ export function Sidebar() {
 
       {/* 导航（按分组渲染小标题，忠于设计稿 NAV_GROUPS） */}
       <nav className="flex-1 overflow-y-auto p-2.5">
-        {NAV_GROUPS.map((group) => (
+        {NAV_GROUPS.map((group) => {
+          // 超管专属项按角色过滤；过滤后整组为空则连小标题一起不渲染。
+          const items = NAV.filter(
+            (n) => n.group === group && (!n.superadminOnly || isSuperAdmin),
+          );
+          if (items.length === 0) return null;
+          return (
           <div key={group} className="mb-3">
             <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#5C534F]">
               {group}
             </div>
-            {NAV.filter((n) => n.group === group).map(({ href, label }) => {
+            {items.map(({ href, label }) => {
               const Icon = ICONS[href];
               const isActive = href === active;
               return (
@@ -83,7 +91,8 @@ export function Sidebar() {
               );
             })}
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* 查看前台（跨 root layout → 整页跳转，用原生 a）*/}

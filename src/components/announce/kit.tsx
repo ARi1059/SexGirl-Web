@@ -17,6 +17,7 @@ type ImageBlock = Extract<AnnouncementBlock, { blockType: "image" }>;
 type ButtonBlock = Extract<AnnouncementBlock, { blockType: "button" }>;
 type StepBlock = Extract<AnnouncementBlock, { blockType: "step" }>;
 type CalloutBlock = Extract<AnnouncementBlock, { blockType: "callout" }>;
+type DownloadBlock = Extract<AnnouncementBlock, { blockType: "download" }>;
 
 /** richText / step.body / callout.content 的 Lexical 值（同一形状）。 */
 type RichTextValue = Extract<AnnouncementBlock, { blockType: "richText" }>["content"];
@@ -122,6 +123,50 @@ export function Btn({
     <Link href={url} className={className}>
       {inner}
     </Link>
+  );
+}
+
+// ── 下载按钮积木 ──────────────────────────────────────────────────────────────
+// 引用「安装包」集合的上传文件（depth:2 已展开为对象）→ 原生 <a download>。
+// platform 决定图标名（白名单 lib/icons：安卓 Smartphone / iOS Apple / 其他 Download），
+// 经 LucideGlyph 渲染（遵守 React Compiler：不在 render 内把查表结果当 JSX 标签）。
+const PLATFORM_ICON: Record<NonNullable<DownloadBlock["platform"]>, string> = {
+  android: "Smartphone",
+  ios: "Apple",
+  other: "Download",
+};
+
+export function DownloadBtn({
+  file,
+  label,
+  platform,
+  version,
+  note,
+}: {
+  file: DownloadBlock["file"];
+  label: string;
+  platform?: DownloadBlock["platform"];
+  version?: string | null;
+  note?: string | null;
+}) {
+  // 未 depth 展开（number）或缺失 → 不渲染（防御，同 resolveImage 思路）。
+  if (!file || typeof file !== "object") return null;
+  const url = file.url;
+  if (!url) return null;
+  const iconName = PLATFORM_ICON[platform ?? "other"];
+  const sub = [version, note].filter(Boolean).join(" · ");
+  return (
+    <a
+      href={url}
+      download
+      className="inline-flex items-center gap-3 rounded-none border border-accent-strong bg-accent-strong px-6 py-3.5 text-on-accent transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus)]"
+    >
+      <LucideGlyph name={iconName} size={20} strokeWidth={1.5} aria-hidden />
+      <span className="flex flex-col leading-tight">
+        <span className="text-[15px] font-medium tracking-[0.02em]">{label}</span>
+        {sub ? <span className="text-[12px] font-normal opacity-85">{sub}</span> : null}
+      </span>
+    </a>
   );
 }
 

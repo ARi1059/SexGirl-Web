@@ -23,3 +23,14 @@ export async function requireAdmin(): Promise<User> {
   if (!admin) redirect("/admin/login");
   return admin;
 }
+
+// 超级管理员门：在 requireAdmin 之上再要求 role === 'superadmin'。
+// 用于公告栏编辑段（仅超管可改「App 下载教学 / 如何永久找到我们」两篇公告，
+// 与 globals/announcements.ts 的 access.update = isSuperAdmin 对齐）。
+// 已登录但非超管 → 跳回 /admin 仪表盘（有后台权限，仅无此页权限）；未登录 → 跳 /admin/login。
+export async function requireSuperAdmin(): Promise<User> {
+  const admin = await getCurrentAdmin();
+  if (!admin) redirect("/admin/login");
+  if (admin.role !== "superadmin") redirect("/admin");
+  return admin;
+}

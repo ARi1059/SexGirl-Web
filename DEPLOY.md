@@ -164,8 +164,9 @@ TLS_MODE=origin DOMAINS="cdsexgirl.com www.cdsexgirl.com" \
 
 ### B-7 · 运维
 
-- **更新**：`cd /opt/sexgirl-web && GIT_PULL=1 bash scripts/deploy-debian12.sh`（或在你的 clone 目录跑，幂等）。
-- **备份**：`pg_dump sexgirl_web` + 打包 `/opt/sexgirl-web/media`。
+- **升级（日常）**：`bash /opt/sexgirl-web/scripts/upgrade-debian12.sh` —— 增量升级专用脚本（[scripts/upgrade-debian12.sh](scripts/upgrade-debian12.sh)）：自动 `pg_dump` 备份 → `git pull` → `payload migrate` → `next build` → 重启 + HTTP 健康检查。构建在重启前完成，**构建失败旧服务不下线**；结语含一键回滚命令。常用：`GIT_REF=v1.2.0`（升到指定 tag）、`BACKUP=0`（跳过备份）、`FORCE=1`（无新提交也重建）。
+- **重做基建 / 改配置**（域名、TLS、端口、换库）：`GIT_PULL=1 bash scripts/deploy-debian12.sh`（幂等可重跑）。
+- **备份**：升级脚本已自动备份到 `/opt/sexgirl-web/backups/`（留最近 7 份）；媒体另打包 `/opt/sexgirl-web/media`。
 - **证书**：Origin 证书 15 年免维护；CF 边缘证书由 Cloudflare 自动续。
 
 ### B-8 · Cloudflare 错误码速查

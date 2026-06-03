@@ -478,7 +478,8 @@ $(echo -e "${c_green}🎉 部署完成${c_off}")
     查看日志    journalctl -u ${APP_NAME} -f
     重启        systemctl restart ${APP_NAME}
     状态        systemctl status ${APP_NAME}
-    更新代码后重新部署   GIT_PULL=1 bash ${APP_DIR}/scripts/deploy-debian12.sh
+    增量升级（推荐）     bash ${APP_DIR}/scripts/upgrade-debian12.sh   # 拉新代码→迁移→构建→重启（含库备份）
+    重做基建/改配置      GIT_PULL=1 bash ${APP_DIR}/scripts/deploy-debian12.sh
 
   备份要点：定期备份 Postgres（pg_dump ${DB_NAME}）与媒体目录 ${APP_DIR}/media。
 EOF

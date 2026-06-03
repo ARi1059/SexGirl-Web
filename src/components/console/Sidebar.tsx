@@ -11,11 +11,12 @@ import {
   Users,
   Heart,
   Settings,
+  Sliders,
   ExternalLink,
   ChevronRight,
   type LucideIcon,
 } from "lucide-react";
-import { NAV, activeHref } from "./nav";
+import { NAV, NAV_GROUPS, activeHref } from "./nav";
 
 const ICONS: Record<string, LucideIcon> = {
   "/admin": LayoutDashboard,
@@ -26,6 +27,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/admin/customers": Users,
   "/admin/favorites": Heart,
   "/admin/users": Settings,
+  "/admin/settings": Sliders,
 };
 
 /**
@@ -53,28 +55,35 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* 导航 */}
+      {/* 导航（按分组渲染小标题，忠于设计稿 NAV_GROUPS） */}
       <nav className="flex-1 overflow-y-auto p-2.5">
-        {NAV.map(({ href, label }) => {
-          const Icon = ICONS[href];
-          const isActive = href === active;
-          return (
-            <Link
-              key={href}
-              href={href}
-              aria-current={isActive ? "page" : undefined}
-              className={`mb-0.5 flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13.5px] transition-colors ${
-                isActive
-                  ? "bg-[#C96A72] font-medium text-white"
-                  : "text-[#B3A9A3] hover:bg-white/[0.06] hover:text-[#F4F0EE]"
-              }`}
-            >
-              {Icon ? <Icon size={15} strokeWidth={isActive ? 2 : 1.75} /> : null}
-              <span className="flex-1">{label}</span>
-              {isActive ? <ChevronRight size={13} /> : null}
-            </Link>
-          );
-        })}
+        {NAV_GROUPS.map((group) => (
+          <div key={group} className="mb-3">
+            <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#5C534F]">
+              {group}
+            </div>
+            {NAV.filter((n) => n.group === group).map(({ href, label }) => {
+              const Icon = ICONS[href];
+              const isActive = href === active;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`mb-0.5 flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13.5px] transition-colors ${
+                    isActive
+                      ? "bg-[#C96A72] font-medium text-white"
+                      : "text-[#B3A9A3] hover:bg-white/[0.06] hover:text-[#F4F0EE]"
+                  }`}
+                >
+                  {Icon ? <Icon size={15} strokeWidth={isActive ? 2 : 1.75} /> : null}
+                  <span className="flex-1">{label}</span>
+                  {isActive ? <ChevronRight size={13} /> : null}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* 查看前台（跨 root layout → 整页跳转，用原生 a）*/}

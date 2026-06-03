@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RichText } from "@payloadcms/richtext-lexical/react";
 import { getProductById, getAllPublishedIds } from "@/lib/products";
+import { getSiteSettings, titleWithSuffix } from "@/lib/site";
 import { Carousel } from "@/components/gallery/Carousel";
 import { StatusBadge } from "@/components/gallery/StatusBadge";
 import { TagRenderer } from "@/components/renderers/TagRenderer";
@@ -25,10 +26,10 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const product = await getProductById(Number(id));
-  if (!product || !product.published) return { title: "未找到 · 定制商品展示" };
+  const [product, s] = await Promise.all([getProductById(Number(id)), getSiteSettings()]);
+  if (!product || !product.published) return { title: titleWithSuffix("未找到", s) };
   return {
-    title: `${product.title} · 定制商品展示`,
+    title: titleWithSuffix(product.title, s),
     description: product.statusText ?? undefined,
   };
 }
@@ -44,6 +45,8 @@ export default async function ProductDetailPage({
 
   const product = await getProductById(numId);
   if (!product || !product.published) notFound(); // 未上架在前台不可见（设计规范 §6.2）
+
+  const s = await getSiteSettings();
 
   // depth 2 已展开 category 为对象；可点眉标跳对应分类页（详情无外层 <Link>，可安全嵌 <a>）。
   const category =
@@ -107,7 +110,7 @@ export default async function ProductDetailPage({
             <ContactSection contacts={product.contacts} label={product.title} />
             <ContactRenderer contacts={product.contacts} className="mt-5" />
             <p className="mt-5 text-small leading-relaxed text-ink-subtle">
-              看中款式，添加微信或 QQ，发送商品名称「{product.title}」即可开始定制
+              {s.contactHint.replace("{title}", product.title)}
             </p>
           </section>
         </div>
